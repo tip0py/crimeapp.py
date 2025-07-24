@@ -2,12 +2,12 @@ import streamlit as st
 import datetime
 import json
 
-    st.set_page_config(
-        page_title="SECURO - Criminology Intelligence Assistant",
-        layout="wide",
-        initial_sidebar_state="collapsed",
-        menu_items=None  # This helps remove some default icons
-    )
+st.set_page_config(
+    page_title="SECURO - Criminology Intelligence Assistant",
+    layout="wide",
+    initial_sidebar_state="collapsed",
+    menu_items=None  # This helps remove some default icons
+)
 
 # Custom CSS for black theme with Times New Roman font and Instagram-style chat bubbles
 st.markdown("""
