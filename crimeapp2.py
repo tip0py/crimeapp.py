@@ -2,11 +2,12 @@ import streamlit as st
 import datetime
 import json
 
-st.set_page_config(
-    page_title="SECURO - Criminology Intelligence Assistant",
-    layout="wide",
-    initial_sidebar_state="collapsed"  # Hide sidebar by default
-)
+    st.set_page_config(
+        page_title="SECURO - Criminology Intelligence Assistant",
+        layout="wide",
+        initial_sidebar_state="collapsed",
+        menu_items=None  # This helps remove some default icons
+    )
 
 # Custom CSS for black theme with Times New Roman font and Instagram-style chat bubbles
 st.markdown("""
@@ -88,8 +89,8 @@ st.markdown("""
     }
    
     .user-bubble {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-        color: #ffffff !important;
+        background: #ffffff !important;
+        color: #000000 !important;
         padding: 12px 16px !important;
         border-radius: 18px 18px 4px 18px !important;
         max-width: 70% !important;
@@ -97,12 +98,13 @@ st.markdown("""
         font-family: 'Times New Roman', Times, serif !important;
         font-size: 15px !important;
         line-height: 1.4 !important;
-        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3) !important;
+        box-shadow: 0 2px 8px rgba(255, 255, 255, 0.3) !important;
+        border: 1px solid #e0e0e0 !important;
     }
    
     .bot-bubble {
-        background: #262626 !important;
-        color: #ffffff !important;
+        background: #ffffff !important;
+        color: #000000 !important;
         padding: 12px 16px !important;
         border-radius: 18px 18px 18px 4px !important;
         max-width: 75% !important;
@@ -110,8 +112,8 @@ st.markdown("""
         font-family: 'Times New Roman', Times, serif !important;
         font-size: 15px !important;
         line-height: 1.4 !important;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
-        border: 1px solid #333333 !important;
+        box-shadow: 0 2px 8px rgba(255, 255, 255, 0.3) !important;
+        border: 1px solid #e0e0e0 !important;
     }
    
     .message-label {
@@ -130,6 +132,23 @@ st.markdown("""
     .bot-label {
         text-align: left !important;
         margin-left: 4px !important;
+    }
+   
+    /* Hide keyboard arrow text */
+    *:contains("keyboard_double_arrow_right") {
+        display: none !important;
+    }
+   
+    /* Additional fixes for material icons */
+    .material-icons, .material-icons-outlined {
+        display: none !important;
+    }
+   
+    /* Hide any material icons or arrow symbols */
+    [data-testid="stSidebar"] .css-1d391kg::before,
+    [data-testid="stSidebar"]::before,
+    .css-1d391kg::before {
+        display: none !important;
     }
    
     /* Chat input styling */
@@ -529,11 +548,29 @@ def init_session_state():
 
 
 def display_custom_message(role, content):
-    """Display a custom formatted message"""
+    """Display Instagram-style chat bubbles"""
     if role == "user":
-        st.markdown(f'<div class="custom-message user-message"><strong>You:</strong> {content}</div>', unsafe_allow_html=True)
+        st.markdown(f'''
+        <div class="chat-container">
+            <div class="user-bubble-container">
+                <div>
+                    <div class="message-label user-label">You</div>
+                    <div class="user-bubble">{content}</div>
+                </div>
+            </div>
+        </div>
+        ''', unsafe_allow_html=True)
     else:
-        st.markdown(f'<div class="custom-message bot-message"><strong>SECURO:</strong> {content}</div>', unsafe_allow_html=True)
+        st.markdown(f'''
+        <div class="chat-container">
+            <div class="bot-bubble-container">
+                <div>
+                    <div class="message-label bot-label">SECURO</div>
+                    <div class="bot-bubble">{content}</div>
+                </div>
+            </div>
+        </div>
+        ''', unsafe_allow_html=True)
 
 
 def add_message_and_rerun(role, content):
@@ -545,8 +582,8 @@ def add_message_and_rerun(role, content):
 def main():
     init_session_state()
    
-    # Add sidebar toggle button
-    if st.button("☰", key="sidebar_toggle", help="Toggle sidebar"):
+    # Add sidebar toggle button with hamburger menu
+    if st.button("☰ Menu", key="sidebar_toggle", help="Toggle sidebar"):
         pass  # Streamlit handles sidebar toggle automatically
    
     # Clean header
