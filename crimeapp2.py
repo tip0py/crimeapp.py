@@ -71,21 +71,22 @@ st.markdown("""
     .chat-container {
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 8px;
         padding: 8px 0;
         font-family: 'Times New Roman', Times, serif !important;
+        margin-bottom: 16px;
     }
    
     .user-bubble-container {
         display: flex;
         justify-content: flex-end;
-        margin-bottom: 8px;
+        width: 100%;
     }
    
     .bot-bubble-container {
         display: flex;
         justify-content: flex-start;
-        margin-bottom: 8px;
+        width: 100%;
     }
    
     .user-bubble {
@@ -98,8 +99,9 @@ st.markdown("""
         font-family: 'Times New Roman', Times, serif !important;
         font-size: 15px !important;
         line-height: 1.4 !important;
-        box-shadow: 0 2px 8px rgba(255, 255, 255, 0.3) !important;
+        box-shadow: 0 2px 8px rgba(255, 255, 255, 0.2) !important;
         border: 1px solid #e0e0e0 !important;
+        display: inline-block !important;
     }
    
     .bot-bubble {
@@ -112,8 +114,9 @@ st.markdown("""
         font-family: 'Times New Roman', Times, serif !important;
         font-size: 15px !important;
         line-height: 1.4 !important;
-        box-shadow: 0 2px 8px rgba(255, 255, 255, 0.3) !important;
+        box-shadow: 0 2px 8px rgba(255, 255, 255, 0.2) !important;
         border: 1px solid #e0e0e0 !important;
+        display: inline-block !important;
     }
    
     .message-label {
@@ -561,12 +564,14 @@ def display_custom_message(role, content):
         </div>
         ''', unsafe_allow_html=True)
     else:
+        # Process the content to handle markdown properly
+        processed_content = content.replace('\n', '<br>')
         st.markdown(f'''
         <div class="chat-container">
             <div class="bot-bubble-container">
                 <div>
                     <div class="message-label bot-label">SECURO</div>
-                    <div class="bot-bubble">{content}</div>
+                    <div class="bot-bubble">{processed_content}</div>
                 </div>
             </div>
         </div>
