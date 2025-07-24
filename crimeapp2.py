@@ -8,21 +8,21 @@ st.set_page_config(
     initial_sidebar_state="collapsed"  # Hide sidebar by default
 )
 
-# Custom CSS for clean ChatGPT-like design
+# Custom CSS for black theme with Times New Roman font
 st.markdown("""
 <style>
-    /* Clean ChatGPT-inspired theme */
+    /* Black theme with Times New Roman font */
     .main, .main .block-container, .stApp, [data-testid="stAppViewContainer"] {
-        background-color: #f7f7f8 !important;
-        color: #374151 !important;
-        font-family: 'Söhne', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', sans-serif !important;
+        background-color: #000000 !important;
+        color: #ffffff !important;
+        font-family: 'Times New Roman', Times, serif !important;
         padding-top: 2rem !important;
     }
    
-    /* Hide default sidebar */
+    /* Sidebar styling */
     [data-testid="stSidebar"] {
-        background-color: #ffffff !important;
-        border-right: 1px solid #e5e7eb !important;
+        background-color: #1a1a1a !important;
+        border-right: 1px solid #333333 !important;
     }
    
     /* Sidebar toggle button */
@@ -31,89 +31,108 @@ st.markdown("""
         top: 1rem;
         left: 1rem;
         z-index: 999;
-        background: #ffffff !important;
-        border: 1px solid #d1d5db !important;
+        background: #1a1a1a !important;
+        border: 1px solid #333333 !important;
         border-radius: 6px !important;
         padding: 8px !important;
         cursor: pointer;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+        box-shadow: 0 1px 3px rgba(255, 255, 255, 0.1) !important;
+        color: #ffffff !important;
     }
    
     /* Clean header */
     h1 {
-        color: #111827 !important;
+        color: #ffffff !important;
         font-weight: 600 !important;
         font-size: 2rem !important;
         text-align: center !important;
         margin-bottom: 0.5rem !important;
-        font-family: 'Söhne', 'ui-sans-serif', 'system-ui', sans-serif !important;
+        font-family: 'Times New Roman', Times, serif !important;
     }
    
     h2, h3 {
-        color: #374151 !important;
+        color: #ffffff !important;
         font-weight: 500 !important;
-        font-family: 'Söhne', 'ui-sans-serif', 'system-ui', sans-serif !important;
+        font-family: 'Times New Roman', Times, serif !important;
     }
    
-    /* Chat messages - ChatGPT style */
+    /* Hide default chat message styling */
     .stChatMessage {
         background-color: transparent !important;
         border: none !important;
-        padding: 1.5rem 0 !important;
-        font-family: 'Söhne', 'ui-sans-serif', 'system-ui', sans-serif !important;
+        padding: 0 !important;
+        margin: 0 !important;
     }
    
-    /* User messages */
-    .stChatMessage[data-testid="user-message"] {
-        background-color: transparent !important;
+    /* Hide default avatars and message containers */
+    .stChatMessage > div {
+        display: none !important;
     }
    
-    /* Assistant messages - alternate background like ChatGPT */
-    .stChatMessage[data-testid="assistant-message"] {
-        background-color: #f7f7f8 !important;
+    /* Custom message styling */
+    .custom-message {
+        padding: 1rem 0 !important;
+        font-family: 'Times New Roman', Times, serif !important;
+        color: #ffffff !important;
+        line-height: 1.6 !important;
+    }
+   
+    .user-message {
+        color: #ffffff !important;
+    }
+   
+    .bot-message {
+        color: #ffffff !important;
+        background-color: #111111 !important;
         margin-left: -2rem !important;
         margin-right: -2rem !important;
         padding-left: 2rem !important;
         padding-right: 2rem !important;
+        padding-top: 1rem !important;
+        padding-bottom: 1rem !important;
     }
    
     /* Chat input styling */
     .stChatInput > div {
-        background-color: #ffffff !important;
-        border: 1px solid #d1d5db !important;
+        background-color: #1a1a1a !important;
+        border: 1px solid #333333 !important;
         border-radius: 12px !important;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05) !important;
+        box-shadow: 0 2px 6px rgba(255, 255, 255, 0.05) !important;
     }
    
     .stChatInput input {
         background-color: transparent !important;
-        color: #374151 !important;
-        font-family: 'Söhne', 'ui-sans-serif', 'system-ui', sans-serif !important;
+        color: #ffffff !important;
+        font-family: 'Times New Roman', Times, serif !important;
         border: none !important;
         font-size: 16px !important;
     }
    
-    /* Buttons - clean style */
+    .stChatInput input::placeholder {
+        color: #888888 !important;
+    }
+   
+    /* Buttons - dark theme */
     .stButton > button {
-        background-color: #ffffff !important;
-        color: #374151 !important;
-        border: 1px solid #d1d5db !important;
+        background-color: #1a1a1a !important;
+        color: #ffffff !important;
+        border: 1px solid #333333 !important;
         border-radius: 6px !important;
-        font-family: 'Söhne', 'ui-sans-serif', 'system-ui', sans-serif !important;
+        font-family: 'Times New Roman', Times, serif !important;
         font-weight: 500 !important;
         transition: all 0.2s !important;
     }
    
     .stButton > button:hover {
-        background-color: #f9fafb !important;
-        border-color: #9ca3af !important;
+        background-color: #333333 !important;
+        border-color: #555555 !important;
     }
    
     /* Selectbox styling */
     .stSelectbox > div > div {
-        background-color: #ffffff !important;
-        color: #374151 !important;
-        border: 1px solid #d1d5db !important;
+        background-color: #1a1a1a !important;
+        color: #ffffff !important;
+        border: 1px solid #333333 !important;
         border-radius: 6px !important;
     }
    
@@ -124,8 +143,8 @@ st.markdown("""
    
     /* Clean text styling */
     .stMarkdown, .stText, p, span, div {
-        color: #374151 !important;
-        font-family: 'Söhne', 'ui-sans-serif', 'system-ui', sans-serif !important;
+        color: #ffffff !important;
+        font-family: 'Times New Roman', Times, serif !important;
     }
    
     /* Hide footer/extra elements */
@@ -133,7 +152,7 @@ st.markdown("""
         display: none !important;
     }
    
-    /* Center container like ChatGPT */
+    /* Center container */
     .main .block-container {
         max-width: 48rem !important;
         padding-left: 1rem !important;
@@ -142,9 +161,53 @@ st.markdown("""
    
     /* Sidebar content styling */
     .css-1d391kg h2, .css-1d391kg h3 {
-        color: #111827 !important;
+        color: #ffffff !important;
         font-weight: 600 !important;
         margin-bottom: 1rem !important;
+    }
+   
+    /* Sidebar text color */
+    .css-1d391kg, .css-1d391kg p, .css-1d391kg div {
+        color: #ffffff !important;
+    }
+   
+    /* Spinner styling */
+    .stSpinner > div {
+        border-color: #ffffff transparent transparent transparent !important;
+    }
+   
+    /* Markdown content styling */
+    .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown h4, .stMarkdown h5, .stMarkdown h6 {
+        color: #ffffff !important;
+    }
+   
+    .stMarkdown p, .stMarkdown li, .stMarkdown span {
+        color: #ffffff !important;
+    }
+   
+    .stMarkdown strong {
+        color: #ffffff !important;
+        font-weight: bold !important;
+    }
+   
+    .stMarkdown em {
+        color: #ffffff !important;
+        font-style: italic !important;
+    }
+   
+    .stMarkdown code {
+        background-color: #333333 !important;
+        color: #ffffff !important;
+        padding: 2px 4px !important;
+        border-radius: 3px !important;
+    }
+   
+    /* Center subtitle */
+    .subtitle {
+        text-align: center;
+        color: #888888 !important;
+        margin-bottom: 2rem;
+        font-family: 'Times New Roman', Times, serif !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -270,7 +333,7 @@ class CriminologyIntelligenceBot:
 • Community survey data"""
 
         else:
-            return """**Criminology Intelligence Dashboard**
+            return """**SECURO Criminology Intelligence Dashboard**
 
 As a criminologist, you have access to:
 
@@ -397,7 +460,7 @@ What aspect of your research can I assist with?"""
             return self.get_criminology_analysis("overview")
        
         else:
-            return """**Criminology Intelligence Assistant**
+            return """**SECURO Intelligence Assistant**
 
 I specialize in:
 • **Crime trend analysis** - Statistical patterns and forecasting
@@ -419,16 +482,18 @@ def init_session_state():
     """Initialize session state variables"""
     if "messages" not in st.session_state:
         st.session_state.messages = [
-            {"role": "assistant", "content": "Welcome to SECURO Criminology Intelligence. I'm specialized in crime analysis, research methodology, and statistical insights for criminal justice professionals. How can I assist with your criminological work today?"}
+            {"role": "assistant", "content": "Welcome to SECURO. I'm specialized in crime analysis, research methodology, and statistical insights for criminal justice professionals. How can I assist with your criminological work today?"}
         ]
     if "chatbot" not in st.session_state:
         st.session_state.chatbot = CriminologyIntelligenceBot()
 
 
-def display_chat_message(message):
-    """Display a chat message with proper formatting"""
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+def display_custom_message(role, content):
+    """Display a custom formatted message"""
+    if role == "user":
+        st.markdown(f'<div class="custom-message user-message"><strong>You:</strong> {content}</div>', unsafe_allow_html=True)
+    else:
+        st.markdown(f'<div class="custom-message bot-message"><strong>SECURO:</strong> {content}</div>', unsafe_allow_html=True)
 
 
 def add_message_and_rerun(role, content):
@@ -444,9 +509,9 @@ def main():
     if st.button("☰", key="sidebar_toggle", help="Toggle sidebar"):
         pass  # Streamlit handles sidebar toggle automatically
    
-    # Clean header - no bot icon
+    # Clean header
     st.title("SECURO")
-    st.markdown("<p style='text-align: center; color: #6b7280; margin-bottom: 2rem;'>Criminology Intelligence Assistant</p>", unsafe_allow_html=True)
+    st.markdown("<p class='subtitle'>Criminology Intelligence Assistant</p>", unsafe_allow_html=True)
 
     chatbot = st.session_state.chatbot
 
@@ -469,9 +534,9 @@ def main():
             ]
             st.rerun()
 
-    # Main chat interface
+    # Main chat interface with custom message display
     for message in st.session_state.messages:
-        display_chat_message(message)
+        display_custom_message(message["role"], message["content"])
 
     # Chat input
     if prompt := st.chat_input("Ask about crime analysis, research methods, statistics, or theoretical frameworks..."):
