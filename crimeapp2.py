@@ -8,7 +8,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"  # Hide sidebar by default
 )
 
-# Custom CSS for black theme with Times New Roman font
+# Custom CSS for black theme with Times New Roman font and Instagram-style chat bubbles
 st.markdown("""
 <style>
     /* Black theme with Times New Roman font */
@@ -25,19 +25,16 @@ st.markdown("""
         border-right: 1px solid #333333 !important;
     }
    
-    /* Sidebar toggle button */
-    .sidebar-toggle {
-        position: fixed;
-        top: 1rem;
-        left: 1rem;
-        z-index: 999;
+    /* Fix the sidebar toggle button to show actual hamburger menu */
+    .sidebar-toggle, .stButton button[kind="secondary"] {
         background: #1a1a1a !important;
         border: 1px solid #333333 !important;
         border-radius: 6px !important;
-        padding: 8px !important;
+        padding: 8px 12px !important;
         cursor: pointer;
         box-shadow: 0 1px 3px rgba(255, 255, 255, 0.1) !important;
         color: #ffffff !important;
+        font-family: 'Times New Roman', Times, serif !important;
     }
    
     /* Clean header */
@@ -69,27 +66,70 @@ st.markdown("""
         display: none !important;
     }
    
-    /* Custom message styling */
-    .custom-message {
-        padding: 1rem 0 !important;
+    /* Instagram-style chat bubbles */
+    .chat-container {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 8px 0;
         font-family: 'Times New Roman', Times, serif !important;
-        color: #ffffff !important;
-        line-height: 1.6 !important;
     }
    
-    .user-message {
-        color: #ffffff !important;
+    .user-bubble-container {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 8px;
     }
    
-    .bot-message {
+    .bot-bubble-container {
+        display: flex;
+        justify-content: flex-start;
+        margin-bottom: 8px;
+    }
+   
+    .user-bubble {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
         color: #ffffff !important;
-        background-color: #111111 !important;
-        margin-left: -2rem !important;
-        margin-right: -2rem !important;
-        padding-left: 2rem !important;
-        padding-right: 2rem !important;
-        padding-top: 1rem !important;
-        padding-bottom: 1rem !important;
+        padding: 12px 16px !important;
+        border-radius: 18px 18px 4px 18px !important;
+        max-width: 70% !important;
+        word-wrap: break-word !important;
+        font-family: 'Times New Roman', Times, serif !important;
+        font-size: 15px !important;
+        line-height: 1.4 !important;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3) !important;
+    }
+   
+    .bot-bubble {
+        background: #262626 !important;
+        color: #ffffff !important;
+        padding: 12px 16px !important;
+        border-radius: 18px 18px 18px 4px !important;
+        max-width: 75% !important;
+        word-wrap: break-word !important;
+        font-family: 'Times New Roman', Times, serif !important;
+        font-size: 15px !important;
+        line-height: 1.4 !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
+        border: 1px solid #333333 !important;
+    }
+   
+    .message-label {
+        font-size: 11px !important;
+        color: #888888 !important;
+        margin-bottom: 4px !important;
+        font-family: 'Times New Roman', Times, serif !important;
+        font-weight: 500 !important;
+    }
+   
+    .user-label {
+        text-align: right !important;
+        margin-right: 4px !important;
+    }
+   
+    .bot-label {
+        text-align: left !important;
+        margin-left: 4px !important;
     }
    
     /* Chat input styling */
