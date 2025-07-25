@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import folium
 from streamlit_folium import folium_static
+import hashlib
+import time
 
 st.set_page_config(
     page_title="SECURO - Criminology Intelligence Assistant",
@@ -173,6 +175,18 @@ st.markdown("""
         background-color: #333333 !important;
         border-color: #555555 !important;
     }
+
+    /* Emergency button styling */
+    .emergency-btn {
+        background-color: #8B0000 !important;
+        color: #ffffff !important;
+        border: 2px solid #FF0000 !important;
+    }
+
+    .emergency-btn:hover {
+        background-color: #FF0000 !important;
+        border-color: #FF4444 !important;
+    }
    
     /* Center subtitle */
     .subtitle {
@@ -193,8 +207,56 @@ st.markdown("""
         padding-left: 1rem !important;
         padding-right: 1rem !important;
     }
+
+    /* Login form styling */
+    .login-container {
+        background-color: #1a1a1a !important;
+        padding: 2rem !important;
+        border-radius: 10px !important;
+        border: 1px solid #333333 !important;
+        max-width: 400px !important;
+        margin: 2rem auto !important;
+    }
 </style>
 """, unsafe_allow_html=True)
+
+class UserAuthentication:
+    def __init__(self):
+        # Initialize user database in session state
+        if "users_db" not in st.session_state:
+            st.session_state.users_db = {}
+        
+    def hash_password(self, password):
+        """Hash password for security"""
+        return hashlib.sha256(password.encode()).hexdigest()
+    
+    def create_account(self, username, password, role):
+        """Create new user account"""
+        if username in st.session_state.users_db:
+            return False, "Username already exists"
+        
+        if len(password) < 6:
+            return False, "Password must be at least 6 characters"
+        
+        st.session_state.users_db[username] = {
+            "password": self.hash_password(password),
+            "role": role,
+            "created": datetime.datetime.now().isoformat()
+        }
+        return True, "Account created successfully"
+    
+    def login(self, username, password):
+        """Authenticate user login"""
+        if username not in st.session_state.users_db:
+            return False, "Username not found"
+        
+        if st.session_state.users_db[username]["password"] != self.hash_password(password):
+            return False, "Invalid password"
+        
+        st.session_state.logged_in = True
+        st.session_state.current_user = username
+        st.session_state.user_role = st.session_state.users_db[username]["role"]
+        return True, "Login successful"
 
 class CriminologyIntelligenceBot:
     def __init__(self):
@@ -205,17 +267,20 @@ class CriminologyIntelligenceBot:
             "police": {
                 "name": "Royal St. Christopher and Nevis Police Force",
                 "number": "911",
-                "alternative": "(869) 465-2241"
+                "alternative": "(869) 465-2241",
+                "warning": "⚠️ **EMERGENCY POLICE CONTACT** ⚠️\n\nYou are about to contact the police emergency services.\n\n**Service:** Royal St. Christopher and Nevis Police Force\n**Number:** 911\n**Direct Line:** (869) 465-2241\n\n**Use for:** Life-threatening emergencies, crimes in progress, immediate danger\n\nDo you want to proceed with this emergency contact?"
             },
             "hospital": {
                 "name": "Joseph N. France General Hospital",
                 "number": "911", 
-                "alternative": "(869) 465-2551"
+                "alternative": "(869) 465-2551",
+                "warning": "🏥 **EMERGENCY MEDICAL CONTACT** 🏥\n\nYou are about to contact emergency medical services.\n\n**Service:** Joseph N. France General Hospital\n**Number:** 911\n**Direct Line:** (869) 465-2551\n\n**Use for:** Medical emergencies, life-threatening injuries, urgent health situations\n\nDo you want to proceed with this emergency contact?"
             },
             "fire": {
                 "name": "Fire and Rescue Services",
                 "number": "911",
-                "alternative": "(869) 465-2366"
+                "alternative": "(869) 465-2366",
+                "warning": "🚒 **EMERGENCY FIRE & RESCUE CONTACT** 🚒\n\nYou are about to contact fire and rescue services.\n\n**Service:** Fire and Rescue Services\n**Number:** 911\n**Direct Line:** (869) 465-2366\n\n**Use for:** Fires, rescues, hazardous material incidents, natural disasters\n\nDo you want to proceed with this emergency contact?"
             }
         }
         
@@ -371,12 +436,42 @@ What would you like to explore?"""
         return None
 
     def create_crime_map(self):
-        """Create crime hotspot map of St. Kitts and Nevis"""
+        """Create crime hotspot map of St. Kitts and Nevis using Google Maps tiles"""
         # St. Kitts and Nevis coordinates
         st_kitts_center = [17.3578, -62.7822]
         
-        # Create map
-        m = folium.Map(location=st_kitts_center, zoom_start=11, tiles='OpenStreetMap')
+        # Create map with Google Maps style tiles
+        m = folium.Map(
+            location=st_kitts_center, 
+            zoom_start=11,
+            tiles=None
+        )
+        
+        # Add Google Maps satellite tiles
+        folium.TileLayer(
+            tiles='https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',
+            attr='Google Satellite',
+            name='Google Satellite',
+            overlay=False,
+            control=True
+        ).add_to(m)
+        
+        # Add Google Maps terrain tiles
+        folium.TileLayer(
+            tiles='https://mt1.google.com/vt/lyrs=p&x={x}&y={y}&z={z}',
+            attr='Google Terrain',
+            name='Google Terrain',
+            overlay=False,
+            control=True
+        ).add_to(m)
+        
+        # Add OpenStreetMap as backup
+        folium.TileLayer(
+            tiles='OpenStreetMap',
+            name='OpenStreetMap',
+            overlay=False,
+            control=True
+        ).add_to(m)
         
         # Crime hotspots with sample data
         hotspots = [
@@ -400,36 +495,33 @@ What would you like to explore?"""
                 fillOpacity=0.6
             ).add_to(m)
         
+        # Add layer control
+        folium.LayerControl().add_to(m)
+        
         return m
 
-    def get_emergency_contacts_display(self):
-        """Return formatted emergency contacts as markdown text"""
-        return """**🚨 EMERGENCY CONTACTS**
-
-**POLICE**
-Royal St. Christopher and Nevis Police Force
-• Emergency: **911**
-• Direct Line: **(869) 465-2241**
-
-**HOSPITAL**
-Joseph N. France General Hospital
-• Emergency: **911**
-• Direct Line: **(869) 465-2551**
-
-**FIRE & RESCUE**
-Fire and Rescue Services
-• Emergency: **911**
-• Direct Line: **(869) 465-2366**
-
-*All emergency services can be reached by dialing 911*"""
+    def get_emergency_contact_warning(self, service_type):
+        """Get emergency contact warning message"""
+        if service_type in self.emergency_contacts:
+            return self.emergency_contacts[service_type]["warning"]
+        return "Emergency contact not found."
 
     def process_criminologist_query(self, user_input):
-        """Process queries using OpenAI integration"""
+        """Process queries using built-in response system"""
         user_input_lower = user_input.lower()
 
         # Check for emergency contact requests
-        if any(word in user_input_lower for word in ["emergency", "police", "hospital", "contact", "number", "help"]):
-            return self.get_emergency_contacts_display()
+        if any(word in user_input_lower for word in ["emergency", "contact", "number", "help"]):
+            return """**EMERGENCY CONTACTS FOR ST. KITTS & NEVIS**
+
+Use the sidebar buttons for specific emergency services:
+- **Police** - For crimes in progress and immediate danger
+- **Hospital** - For medical emergencies
+- **Fire Department** - For fires and rescue situations
+
+**All services can be reached at 911 for immediate emergencies.**
+
+Click the specific service buttons in the sidebar for detailed contact information."""
         
         # Check for chart/statistics requests
         elif any(word in user_input_lower for word in ["chart", "graph", "statistics", "visual", "plot"]):
@@ -437,7 +529,7 @@ Fire and Rescue Services
         
         # Check for map requests
         elif any(word in user_input_lower for word in ["map", "location", "hotspot", "area", "geographic"]):
-            return "Crime Hotspot Map Generated - Interactive map showing crime distribution across St. Kitts and Nevis is now available in the sidebar."
+            return "Crime Hotspot Map Generated - Interactive map with Google Maps integration showing crime distribution across St. Kitts and Nevis is now available in the sidebar."
         
         # Use built-in response system for complex queries
         else:
@@ -451,14 +543,68 @@ Fire and Rescue Services
 
 
 def init_session_state():
-    """Initialize session state variables - REMOVED welcome message"""
+    """Initialize session state variables"""
     if "messages" not in st.session_state:
-        st.session_state.messages = []  # Start with empty messages
+        st.session_state.messages = []
     if "chatbot" not in st.session_state:
         st.session_state.chatbot = CriminologyIntelligenceBot()
     if "sidebar_open" not in st.session_state:
         st.session_state.sidebar_open = False
+    if "logged_in" not in st.session_state:
+        st.session_state.logged_in = False
+    if "current_user" not in st.session_state:
+        st.session_state.current_user = None
+    if "user_role" not in st.session_state:
+        st.session_state.user_role = None
+    if "auth" not in st.session_state:
+        st.session_state.auth = UserAuthentication()
+    if "emergency_confirmation" not in st.session_state:
+        st.session_state.emergency_confirmation = None
 
+def show_login_page():
+    """Display login/registration page"""
+    st.title("SECURO")
+    st.markdown("<p class='subtitle'>Criminology Intelligence Assistant for St. Kitts & Nevis</p>", unsafe_allow_html=True)
+    
+    tab1, tab2 = st.tabs(["Login", "Create Account"])
+    
+    with tab1:
+        st.subheader("Login to SECURO")
+        username = st.text_input("Username", key="login_username")
+        password = st.text_input("Password", type="password", key="login_password")
+        
+        if st.button("Login", use_container_width=True):
+            if username and password:
+                success, message = st.session_state.auth.login(username, password)
+                if success:
+                    st.success(message)
+                    time.sleep(1)
+                    st.rerun()
+                else:
+                    st.error(message)
+            else:
+                st.error("Please enter both username and password")
+    
+    with tab2:
+        st.subheader("Create New Account")
+        new_username = st.text_input("Choose Username", key="new_username")
+        new_password = st.text_input("Choose Password", type="password", key="new_password")
+        confirm_password = st.text_input("Confirm Password", type="password", key="confirm_password")
+        role = st.selectbox("Role", ["Criminologist", "Law Enforcement", "Researcher", "Student"])
+        
+        if st.button("Create Account", use_container_width=True):
+            if new_username and new_password and confirm_password:
+                if new_password != confirm_password:
+                    st.error("Passwords do not match")
+                else:
+                    success, message = st.session_state.auth.create_account(new_username, new_password, role)
+                    if success:
+                        st.success(message)
+                        st.info("You can now login using your credentials")
+                    else:
+                        st.error(message)
+            else:
+                st.error("Please fill in all fields")
 
 def display_message(role, content):
     """Display messages with proper styling"""
@@ -475,31 +621,59 @@ def display_message(role, content):
         </div>
         ''', unsafe_allow_html=True)
 
+def handle_emergency_contact(service_type):
+    """Handle emergency contact with confirmation"""
+    chatbot = st.session_state.chatbot
+    
+    # Show warning message
+    warning_message = chatbot.get_emergency_contact_warning(service_type)
+    st.session_state.messages.append({"role": "assistant", "content": warning_message})
+    st.session_state.emergency_confirmation = service_type
+    st.rerun()
 
 def main():
     init_session_state()
     
-    # Header
-    st.title("SECURO")
-    st.markdown("<p class='subtitle'>Criminology Intelligence Assistant for St. Kitts & Nevis</p>", unsafe_allow_html=True)
+    # Check if user is logged in
+    if not st.session_state.logged_in:
+        show_login_page()
+        return
+    
+    # Header with user info
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col1:
+        st.write(f"Welcome, **{st.session_state.current_user}**")
+        st.write(f"Role: *{st.session_state.user_role}*")
+    with col2:
+        st.title("SECURO")
+        st.markdown("<p class='subtitle'>Criminology Intelligence Assistant for St. Kitts & Nevis</p>", unsafe_allow_html=True)
+    with col3:
+        if st.button("Logout"):
+            st.session_state.logged_in = False
+            st.session_state.current_user = None
+            st.session_state.user_role = None
+            st.session_state.messages = []
+            st.rerun()
 
     chatbot = st.session_state.chatbot
 
-    # Enhanced sidebar with more features - REMOVED EMOJIS
+    # Enhanced sidebar with more features
     with st.sidebar:
         st.header("Criminology Tools")
         
         # Emergency Contacts Section
         st.subheader("Emergency Contacts")
-        if st.button("Police", use_container_width=True):
-            response = chatbot.get_emergency_contacts_display()
-            st.session_state.messages.append({"role": "assistant", "content": response})
-            st.rerun()
-            
-        if st.button("Hospital", use_container_width=True):
-            response = chatbot.get_emergency_contacts_display()
-            st.session_state.messages.append({"role": "assistant", "content": response})
-            st.rerun()
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("Police", use_container_width=True, key="police_btn"):
+                handle_emergency_contact("police")
+        with col2:
+            if st.button("Hospital", use_container_width=True, key="hospital_btn"):
+                handle_emergency_contact("hospital")
+        
+        if st.button("Fire Department", use_container_width=True, key="fire_btn"):
+            handle_emergency_contact("fire")
         
         st.divider()
         
@@ -515,7 +689,7 @@ def main():
         if st.button("Crime Hotspot Map", use_container_width=True):
             crime_map = chatbot.create_crime_map()
             folium_static(crime_map, width=300, height=400)
-            st.session_state.messages.append({"role": "assistant", "content": "Interactive crime hotspot map has been generated showing crime distribution across St. Kitts and Nevis."})
+            st.session_state.messages.append({"role": "assistant", "content": "Interactive crime hotspot map with Google Maps integration has been generated showing crime distribution across St. Kitts and Nevis."})
             st.rerun()
 
         if st.button("Advanced Statistics", use_container_width=True):
@@ -556,6 +730,32 @@ How can I assist with your specific analytical needs?"""
     with chat_container:
         for message in st.session_state.messages:
             display_message(message["role"], message["content"])
+        
+        # Handle emergency confirmation
+        if st.session_state.emergency_confirmation:
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("YES - Proceed with Emergency Contact", type="primary", use_container_width=True):
+                    service = st.session_state.emergency_confirmation
+                    contact_info = chatbot.emergency_contacts[service]
+                    response = f"""**EMERGENCY CONTACT CONFIRMED**
+
+**Contacting:** {contact_info['name']}
+**Primary Number:** {contact_info['number']}
+**Direct Line:** {contact_info['alternative']}
+
+**IMPORTANT:** This is a simulation. In a real emergency, you would now call {contact_info['number']} or {contact_info['alternative']}.
+
+Stay safe and provide clear information about your location and situation."""
+                    st.session_state.messages.append({"role": "assistant", "content": response})
+                    st.session_state.emergency_confirmation = None
+                    st.rerun()
+            
+            with col2:
+                if st.button("NO - Cancel", use_container_width=True):
+                    st.session_state.messages.append({"role": "assistant", "content": "Emergency contact cancelled. If you need assistance, please use the chat or contact non-emergency services."})
+                    st.session_state.emergency_confirmation = None
+                    st.rerun()
 
     # Chat input at the bottom
     if prompt := st.chat_input("Ask about crime analysis, research methods, statistics, emergency contacts, or request charts and maps..."):
