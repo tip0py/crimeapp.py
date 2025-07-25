@@ -218,15 +218,6 @@ st.markdown("""
         max-width: 400px !important;
         margin: 2rem auto !important;
     }
-
-    /* API Key input styling */
-    .api-key-section {
-        background-color: #1a1a1a !important;
-        padding: 1rem !important;
-        border-radius: 8px !important;
-        border: 1px solid #333333 !important;
-        margin-bottom: 1rem !important;
-    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -269,14 +260,12 @@ class UserAuthentication:
         return True, "Login successful"
 
 class GeminiAPI:
-    def __init__(self, api_key=None):
-        self.api_key = api_key
+    def __init__(self):
+        # Hardcoded API key
+        self.api_key = "AIzaSyCsb-NiyZwU5J-AitQan9HaHzNse2kN5_c"
         
     def get_gemini_response(self, prompt):
         """Gets a response from the Gemini API."""
-        if not self.api_key:
-            return "⚠️ **Gemini API Key Required** ⚠️\n\nPlease enter your Google AI Studio API key in the sidebar to use the AI assistant. You can get a free API key from [Google AI Studio](https://aistudio.google.com/)."
-        
         try:
             API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key={self.api_key}"
             
@@ -377,10 +366,6 @@ class CriminologyIntelligenceBot:
                 "crime_rate_change": "-5.6%"
             }
         }
-
-    def set_api_key(self, api_key):
-        """Set the Gemini API key"""
-        self.gemini_api.api_key = api_key
 
     def create_criminology_prompt(self, user_input):
         """Create a specialized prompt for criminology queries"""
@@ -605,8 +590,6 @@ def init_session_state():
         st.session_state.auth = UserAuthentication()
     if "emergency_confirmation" not in st.session_state:
         st.session_state.emergency_confirmation = None
-    if "gemini_api_key" not in st.session_state:
-        st.session_state.gemini_api_key = ""
 
 def show_login_page():
     """Display login/registration page"""
@@ -704,41 +687,12 @@ def main():
 
     chatbot = st.session_state.chatbot
 
-    # Enhanced sidebar with more features
+    # Simplified sidebar without API key configuration
     with st.sidebar:
         st.header("Criminology Tools")
         
-        # API Key Configuration
-        st.subheader("🤖 AI Configuration")
-        with st.expander("Gemini API Setup", expanded=not st.session_state.gemini_api_key):
-            st.markdown("""
-            **Get your free Gemini API key:**
-            1. Visit [Google AI Studio](https://aistudio.google.com/)
-            2. Sign in with your Google account
-            3. Click "Get API Key"
-            4. Create a new API key
-            5. Copy and paste it below
-            """)
-            
-            api_key_input = st.text_input(
-                "Enter your Gemini API Key:",
-                type="password",
-                value=st.session_state.gemini_api_key,
-                help="Your API key is stored securely for this session only"
-            )
-            
-            if api_key_input != st.session_state.gemini_api_key:
-                st.session_state.gemini_api_key = api_key_input
-                chatbot.set_api_key(api_key_input)
-                if api_key_input:
-                    st.success("✅ API key updated successfully!")
-                else:
-                    st.warning("⚠️ API key cleared")
-            
-            if st.session_state.gemini_api_key:
-                st.success("🟢 Gemini AI is active")
-            else:
-                st.error("🔴 Gemini AI requires API key")
+        # Status indicator
+        st.success("🤖 Gemini AI is active")
         
         st.divider()
         
