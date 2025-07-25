@@ -8,6 +8,7 @@ import folium
 from streamlit_folium import folium_static
 import hashlib
 import time
+import os
 
 st.set_page_config(
     page_title="SECURO - Criminology Intelligence Assistant",
@@ -217,6 +218,15 @@ st.markdown("""
         max-width: 400px !important;
         margin: 2rem auto !important;
     }
+
+    /* API Key input styling */
+    .api-key-section {
+        background-color: #1a1a1a !important;
+        padding: 1rem !important;
+        border-radius: 8px !important;
+        border: 1px solid #333333 !important;
+        margin-bottom: 1rem !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -258,9 +268,57 @@ class UserAuthentication:
         st.session_state.user_role = st.session_state.users_db[username]["role"]
         return True, "Login successful"
 
+class GeminiAPI:
+    def __init__(self, api_key=None):
+        self.api_key = api_key
+        
+    def get_gemini_response(self, prompt):
+        """Gets a response from the Gemini API."""
+        if not self.api_key:
+            return "⚠️ **Gemini API Key Required** ⚠️\n\nPlease enter your Google AI Studio API key in the sidebar to use the AI assistant. You can get a free API key from [Google AI Studio](https://aistudio.google.com/)."
+        
+        try:
+            API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key={self.api_key}"
+            
+            payload = {
+                "contents": [{"parts": [{"text": prompt}]}],
+                "generationConfig": {
+                    "temperature": 0.7,
+                    "topK": 40,
+                    "topP": 0.95,
+                    "maxOutputTokens": 1024,
+                }
+            }
+            
+            headers = {"Content-Type": "application/json"}
+            
+            response = requests.post(API_URL, headers=headers, json=payload, timeout=30)
+            
+            if response.status_code == 200:
+                response_data = response.json()
+                if 'candidates' in response_data and len(response_data['candidates']) > 0:
+                    content = response_data['candidates'][0]['content']['parts'][0]['text']
+                    return content
+                else:
+                    return "Sorry, I couldn't generate a response. Please try rephrasing your question."
+            elif response.status_code == 400:
+                return "⚠️ **API Error** ⚠️\n\nInvalid API key or request format. Please check your Google AI Studio API key."
+            elif response.status_code == 403:
+                return "⚠️ **API Access Denied** ⚠️\n\nAPI key doesn't have permission or quota exceeded. Please check your Google AI Studio settings."
+            else:
+                return f"⚠️ **API Error** ⚠️\n\nReceived status code {response.status_code}. Please try again later."
+                
+        except requests.exceptions.Timeout:
+            return "⚠️ **Request Timeout** ⚠️\n\nThe API request timed out. Please try again."
+        except requests.exceptions.RequestException as e:
+            return f"⚠️ **Connection Error** ⚠️\n\nFailed to connect to Gemini API: {str(e)}"
+        except Exception as e:
+            return f"⚠️ **Unexpected Error** ⚠️\n\nAn error occurred: {str(e)}"
+
 class CriminologyIntelligenceBot:
     def __init__(self):
         self.stats_api_endpoint = "http://www.police.kn/media/statistics"
+        self.gemini_api = GeminiAPI()
         
         # Emergency contacts for St. Kitts and Nevis
         self.emergency_contacts = {
@@ -320,72 +378,64 @@ class CriminologyIntelligenceBot:
             }
         }
 
-    def get_basic_response(self, prompt):
-        """Get basic response without OpenAI"""
-        user_input_lower = prompt.lower()
-        
-        # Crime analysis responses
-        if any(word in user_input_lower for word in ["crime", "analysis", "trend", "pattern"]):
-            return """Based on our 2024 crime data for St. Kitts and Nevis:
+    def set_api_key(self, api_key):
+        """Set the Gemini API key"""
+        self.gemini_api.api_key = api_key
 
-- Total crimes decreased by 5.6% from 2023 to 2024 (1,180 total cases)
-- Property crimes remain the highest category (590 cases)
-- Violent crimes showed a decline (165 cases vs 180 in 2023)
-- Clearance rate improved to 71.8%
+    def create_criminology_prompt(self, user_input):
+        """Create a specialized prompt for criminology queries"""
+        system_context = f"""
+You are SECURO, an advanced AI criminology intelligence assistant specifically designed for St. Kitts and Nevis. You have expertise in:
+
+**Core Specializations:**
+- Criminal justice theory and practice
+- Crime pattern analysis and prediction
+- Research methodologies in criminology
+- Statistical analysis of crime data
+- Law enforcement strategies
+- Community policing approaches
+- Criminal behavior analysis
+- Forensic science applications
+
+**Local Context - St. Kitts and Nevis:**
+- Small island developing state (SIDS) crime patterns
+- Tourism industry impact on crime
+- Economic factors affecting criminal behavior
+- Regional Caribbean crime trends
+- Local law enforcement structure
+- Community-based crime prevention
+
+**Available Data:**
+2023 Crime Statistics:
+- Total crimes: 1,250 (+5.2% from previous year)
+- Violent crimes: 180 cases
+- Property crimes: 620 cases  
+- Drug crimes: 280 cases
+- Clearance rate: 68.2%
+- Most affected areas: Basseterre, Frigate Bay, Sandy Point
+
+2024 Crime Statistics:
+- Total crimes: 1,180 (-5.6% from previous year)
+- Violent crimes: 165 cases
+- Property crimes: 590 cases
+- Drug crimes: 260 cases
+- Clearance rate: 71.8%
 - Most affected areas: Basseterre, Charlestown, Dieppe Bay
 
-I can provide more specific analysis on any crime category you're interested in."""
+**Response Guidelines:**
+- Provide evidence-based, professional analysis
+- Reference relevant criminological theories when applicable
+- Include statistical insights from available data
+- Suggest practical applications for law enforcement
+- Maintain academic rigor while being accessible
+- Consider Caribbean and small island state contexts
+- Offer actionable recommendations when appropriate
 
-        elif any(word in user_input_lower for word in ["methodology", "research", "study"]):
-            return """For criminological research in St. Kitts and Nevis, I recommend:
+**Current User Query:** {user_input}
 
-**Quantitative Methods:**
-- Statistical analysis of crime patterns
-- Time series analysis for trend identification
-- Geographic information systems (GIS) mapping
-- Regression analysis for causal factors
-
-**Qualitative Methods:**
-- Community surveys and interviews
-- Focus groups with law enforcement
-- Case study analysis
-- Ethnographic observations
-
-**Data Sources:**
-- Police incident reports
-- Court records
-- Community surveys
-- Economic indicators
-
-What specific research question are you investigating?"""
-
-        elif any(word in user_input_lower for word in ["theory", "theoretical", "framework"]):
-            return """Key criminological theories applicable to Caribbean crime patterns:
-
-**Social Disorganization Theory:** Examines how community structure affects crime rates
-**Strain Theory:** Analyzes the gap between cultural goals and legitimate means
-**Social Learning Theory:** Studies how criminal behavior is learned through social interaction
-**Routine Activities Theory:** Focuses on crime opportunities based on daily activities
-
-**Caribbean-Specific Considerations:**
-- Economic dependency and development patterns
-- Migration and diaspora effects
-- Tourism industry impacts
-- Colonial legacy influences
-
-Which theoretical framework interests you most?"""
-
-        else:
-            return """I'm SECURO, your criminology intelligence assistant for St. Kitts and Nevis. I can help with:
-
-- Crime statistics and trend analysis
-- Research methodologies
-- Theoretical frameworks
-- Emergency contacts
-- Geographic crime mapping
-- Statistical analysis
-
-What would you like to explore?"""
+Please provide a comprehensive, professional response that demonstrates deep criminological expertise while being practical and relevant to St. Kitts and Nevis context.
+"""
+        return system_context
 
     def create_crime_chart(self, year="2024"):
         """Create crime statistics chart using matplotlib"""
@@ -507,10 +557,10 @@ What would you like to explore?"""
         return "Emergency contact not found."
 
     def process_criminologist_query(self, user_input):
-        """Process queries using built-in response system"""
+        """Process queries using Gemini API with criminology specialization"""
         user_input_lower = user_input.lower()
 
-        # Check for emergency contact requests
+        # Handle emergency contact requests first
         if any(word in user_input_lower for word in ["emergency", "contact", "number", "help"]):
             return """**EMERGENCY CONTACTS FOR ST. KITTS & NEVIS**
 
@@ -523,23 +573,18 @@ Use the sidebar buttons for specific emergency services:
 
 Click the specific service buttons in the sidebar for detailed contact information."""
         
-        # Check for chart/statistics requests
+        # Handle chart/statistics requests
         elif any(word in user_input_lower for word in ["chart", "graph", "statistics", "visual", "plot"]):
             return "Crime Statistics Chart Generated - Check the sidebar for visual data representation."
         
-        # Check for map requests
+        # Handle map requests
         elif any(word in user_input_lower for word in ["map", "location", "hotspot", "area", "geographic"]):
             return "Crime Hotspot Map Generated - Interactive map with Google Maps integration showing crime distribution across St. Kitts and Nevis is now available in the sidebar."
         
-        # Use built-in response system for complex queries
+        # Use Gemini API for complex criminology queries
         else:
-            enhanced_prompt = f"""
-            As SECURO, a criminology intelligence assistant for St. Kitts and Nevis, please respond to: {user_input}
-            
-            Context: You have access to crime data for 2023-2024, research methodologies, theoretical frameworks, and local crime patterns.
-            Keep responses professional, analytical, and focused on criminological insights.
-            """
-            return self.get_basic_response(enhanced_prompt)
+            enhanced_prompt = self.create_criminology_prompt(user_input)
+            return self.gemini_api.get_gemini_response(enhanced_prompt)
 
 
 def init_session_state():
@@ -560,6 +605,8 @@ def init_session_state():
         st.session_state.auth = UserAuthentication()
     if "emergency_confirmation" not in st.session_state:
         st.session_state.emergency_confirmation = None
+    if "gemini_api_key" not in st.session_state:
+        st.session_state.gemini_api_key = ""
 
 def show_login_page():
     """Display login/registration page"""
@@ -661,8 +708,42 @@ def main():
     with st.sidebar:
         st.header("Criminology Tools")
         
+        # API Key Configuration
+        st.subheader("🤖 AI Configuration")
+        with st.expander("Gemini API Setup", expanded=not st.session_state.gemini_api_key):
+            st.markdown("""
+            **Get your free Gemini API key:**
+            1. Visit [Google AI Studio](https://aistudio.google.com/)
+            2. Sign in with your Google account
+            3. Click "Get API Key"
+            4. Create a new API key
+            5. Copy and paste it below
+            """)
+            
+            api_key_input = st.text_input(
+                "Enter your Gemini API Key:",
+                type="password",
+                value=st.session_state.gemini_api_key,
+                help="Your API key is stored securely for this session only"
+            )
+            
+            if api_key_input != st.session_state.gemini_api_key:
+                st.session_state.gemini_api_key = api_key_input
+                chatbot.set_api_key(api_key_input)
+                if api_key_input:
+                    st.success("✅ API key updated successfully!")
+                else:
+                    st.warning("⚠️ API key cleared")
+            
+            if st.session_state.gemini_api_key:
+                st.success("🟢 Gemini AI is active")
+            else:
+                st.error("🔴 Gemini AI requires API key")
+        
+        st.divider()
+        
         # Emergency Contacts Section
-        st.subheader("Emergency Contacts")
+        st.subheader("🚨 Emergency Contacts")
         
         col1, col2 = st.columns(2)
         with col1:
@@ -678,7 +759,7 @@ def main():
         st.divider()
         
         # Analysis Tools
-        st.subheader("Analysis Tools")
+        st.subheader("📊 Analysis Tools")
         if st.button("Crime Statistics Chart", use_container_width=True):
             fig = chatbot.create_crime_chart()
             if fig:
@@ -720,7 +801,7 @@ How can I assist with your specific analytical needs?"""
         st.divider()
         
         # Utility Functions
-        st.subheader("Utilities")
+        st.subheader("🛠 Utilities")
         if st.button("Clear Chat", use_container_width=True):
             st.session_state.messages = []
             st.rerun()
@@ -763,7 +844,7 @@ Stay safe and provide clear information about your location and situation."""
         st.session_state.messages.append({"role": "user", "content": prompt})
         
         # Get bot response
-        with st.spinner("Analyzing your request..."):
+        with st.spinner("🤖 Analyzing your request with Gemini AI..."):
             response = chatbot.process_criminologist_query(prompt)
         
         # Add bot response
