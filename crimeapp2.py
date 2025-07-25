@@ -353,24 +353,25 @@ class CriminologyIntelligenceBot:
         return m
 
     def get_emergency_contacts_display(self):
-        """Return formatted emergency contacts"""
-        contacts_html = """
-        <div style='color: white; font-family: Times New Roman;'>
-        <h3 style='color: white; text-align: center; margin-bottom: 20px;'>🚨 Emergency Contacts</h3>
-        """
-        
-        for service, info in self.emergency_contacts.items():
-            icon = "👮" if service == "police" else "🏥" if service == "hospital" else "🚒"
-            contacts_html += f"""
-            <div class='emergency-contact'>
-                {icon} <strong>{info['name']}</strong><br>
-                Primary: {info['number']}<br>
-                Direct: {info['alternative']}
-            </div>
-            """
-        
-        contacts_html += "</div>"
-        return contacts_html
+        """Return formatted emergency contacts as text for proper display"""
+        contacts_text = """**Emergency Contacts**
+
+**Police**
+Royal St. Christopher and Nevis Police Force
+Primary: 911
+Direct: (869) 465-2241
+
+**Hospital**
+Joseph N. France General Hospital
+Primary: 911
+Direct: (869) 465-2551
+
+**Fire Department**
+Fire and Rescue Services
+Primary: 911
+Direct: (869) 465-2366
+"""
+        return contacts_text
 
     def process_criminologist_query(self, user_input):
         """Process queries using OpenAI integration"""
@@ -382,11 +383,11 @@ class CriminologyIntelligenceBot:
         
         # Check for chart/statistics requests
         elif any(word in user_input_lower for word in ["chart", "graph", "statistics", "visual", "plot"]):
-            return "📊 **Crime Statistics Chart Generated** - Check the sidebar for visual data representation."
+            return "Crime Statistics Chart Generated - Check the sidebar for visual data representation."
         
         # Check for map requests
         elif any(word in user_input_lower for word in ["map", "location", "hotspot", "area", "geographic"]):
-            return "🗺️ **Crime Hotspot Map Generated** - Interactive map showing crime distribution across St. Kitts and Nevis is now available in the sidebar."
+            return "Crime Hotspot Map Generated - Interactive map showing crime distribution across St. Kitts and Nevis is now available in the sidebar."
         
         # Use OpenAI for complex queries
         else:
@@ -434,39 +435,41 @@ def main():
 
     chatbot = st.session_state.chatbot
 
-    # Enhanced sidebar with more features
+    # Enhanced sidebar with more features - REMOVED EMOJIS
     with st.sidebar:
-        st.header("🔧 Criminology Tools")
+        st.header("Criminology Tools")
         
         # Emergency Contacts Section
-        st.subheader("🚨 Emergency Contacts")
-        if st.button("👮 Police", use_container_width=True):
-            st.session_state.messages.append({"role": "assistant", "content": chatbot.get_emergency_contacts_display()})
+        st.subheader("Emergency Contacts")
+        if st.button("Police", use_container_width=True):
+            response = chatbot.get_emergency_contacts_display()
+            st.session_state.messages.append({"role": "assistant", "content": response})
             st.rerun()
             
-        if st.button("🏥 Hospital", use_container_width=True):
-            st.session_state.messages.append({"role": "assistant", "content": chatbot.get_emergency_contacts_display()})
+        if st.button("Hospital", use_container_width=True):
+            response = chatbot.get_emergency_contacts_display()
+            st.session_state.messages.append({"role": "assistant", "content": response})
             st.rerun()
         
         st.divider()
         
         # Analysis Tools
-        st.subheader("📊 Analysis Tools")
+        st.subheader("Analysis Tools")
         if st.button("Crime Statistics Chart", use_container_width=True):
             fig = chatbot.create_crime_chart()
             if fig:
                 st.pyplot(fig)
-                st.session_state.messages.append({"role": "assistant", "content": "📊 Crime statistics chart has been generated and displayed in the sidebar."})
+                st.session_state.messages.append({"role": "assistant", "content": "Crime statistics chart has been generated and displayed in the sidebar."})
                 st.rerun()
 
         if st.button("Crime Hotspot Map", use_container_width=True):
             crime_map = chatbot.create_crime_map()
             folium_static(crime_map, width=300, height=400)
-            st.session_state.messages.append({"role": "assistant", "content": "🗺️ Interactive crime hotspot map has been generated showing crime distribution across St. Kitts and Nevis."})
+            st.session_state.messages.append({"role": "assistant", "content": "Interactive crime hotspot map has been generated showing crime distribution across St. Kitts and Nevis."})
             st.rerun()
 
         if st.button("Advanced Statistics", use_container_width=True):
-            stats_response = """**📈 Advanced Crime Analytics Dashboard**
+            stats_response = """**Advanced Crime Analytics Dashboard**
 
 **Real-time Data Integration:**
 • Connected to police.kn statistics API
@@ -493,7 +496,7 @@ How can I assist with your specific analytical needs?"""
         st.divider()
         
         # Utility Functions
-        st.subheader("⚙️ Utilities")
+        st.subheader("Utilities")
         if st.button("Clear Chat", use_container_width=True):
             st.session_state.messages = []
             st.rerun()
@@ -510,7 +513,7 @@ How can I assist with your specific analytical needs?"""
         st.session_state.messages.append({"role": "user", "content": prompt})
         
         # Get bot response
-        with st.spinner("🔍 Analyzing your request..."):
+        with st.spinner("Analyzing your request..."):
             response = chatbot.process_criminologist_query(prompt)
         
         # Add bot response
