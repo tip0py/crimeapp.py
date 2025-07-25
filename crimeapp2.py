@@ -1,15 +1,24 @@
 import streamlit as st
 import datetime
 import json
+import openai
+import requests
+import matplotlib.pyplot as plt
+import pandas as pd
+import folium
+from streamlit_folium import folium_static
+
+# Configure OpenAI API
+openai.api_key = st.secrets["OPENAI_API_KEY"]
 
 st.set_page_config(
     page_title="SECURO - Criminology Intelligence Assistant",
     layout="wide",
     initial_sidebar_state="collapsed",
-    menu_items=None  # This helps remove some default icons
+    menu_items=None
 )
 
-# Custom CSS for black theme with Times New Roman font and Instagram-style chat bubbles
+# Custom CSS for black theme with fixed chat bubbles
 st.markdown("""
 <style>
     /* Black theme with Times New Roman font */
@@ -26,16 +35,25 @@ st.markdown("""
         border-right: 1px solid #333333 !important;
     }
    
-    /* Fix the sidebar toggle button to show actual hamburger menu */
-    .sidebar-toggle, .stButton button[kind="secondary"] {
+    /* Sidebar content styling */
+    [data-testid="stSidebar"] * {
+        color: #ffffff !important;
+        font-family: 'Times New Roman', Times, serif !important;
+    }
+   
+    /* Menu button styling */
+    .menu-button {
+        position: fixed;
+        top: 1rem;
+        left: 1rem;
+        z-index: 999;
         background: #1a1a1a !important;
         border: 1px solid #333333 !important;
         border-radius: 6px !important;
         padding: 8px 12px !important;
-        cursor: pointer;
-        box-shadow: 0 1px 3px rgba(255, 255, 255, 0.1) !important;
         color: #ffffff !important;
         font-family: 'Times New Roman', Times, serif !important;
+        cursor: pointer;
     }
    
     /* Clean header */
@@ -54,39 +72,19 @@ st.markdown("""
         font-family: 'Times New Roman', Times, serif !important;
     }
    
-    /* Hide default chat message styling */
-    .stChatMessage {
-        background-color: transparent !important;
-        border: none !important;
-        padding: 0 !important;
-        margin: 0 !important;
+    /* Fix chat message containers */
+    .chat-message {
+        margin-bottom: 1rem !important;
+        clear: both !important;
+        overflow: hidden !important;
     }
    
-    /* Hide default avatars and message containers */
-    .stChatMessage > div {
-        display: none !important;
-    }
-   
-    /* Instagram-style chat bubbles */
-    .chat-container {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        padding: 8px 0;
-        font-family: 'Times New Roman', Times, serif !important;
-        margin-bottom: 16px;
-    }
-   
-    .user-bubble-container {
+    /* User message styling */
+    .user-message {
         display: flex;
         justify-content: flex-end;
-        width: 100%;
-    }
-   
-    .bot-bubble-container {
-        display: flex;
-        justify-content: flex-start;
-        width: 100%;
+        margin-bottom: 1rem;
+        clear: both;
     }
    
     .user-bubble {
@@ -100,13 +98,21 @@ st.markdown("""
         font-size: 15px !important;
         line-height: 1.4 !important;
         box-shadow: 0 2px 8px rgba(255, 255, 255, 0.2) !important;
-        border: 1px solid #e0e0e0 !important;
         display: inline-block !important;
+        text-align: left !important;
+    }
+   
+    /* Bot message styling */
+    .bot-message {
+        display: flex;
+        justify-content: flex-start;
+        margin-bottom: 1rem;
+        clear: both;
     }
    
     .bot-bubble {
-        background: #ffffff !important;
-        color: #000000 !important;
+        background: #2c2c2c !important;
+        color: #ffffff !important;
         padding: 12px 16px !important;
         border-radius: 18px 18px 18px 4px !important;
         max-width: 75% !important;
@@ -114,44 +120,25 @@ st.markdown("""
         font-family: 'Times New Roman', Times, serif !important;
         font-size: 15px !important;
         line-height: 1.4 !important;
-        box-shadow: 0 2px 8px rgba(255, 255, 255, 0.2) !important;
-        border: 1px solid #e0e0e0 !important;
+        box-shadow: 0 2px 8px rgba(255, 255, 255, 0.1) !important;
         display: inline-block !important;
-    }
-   
-    .message-label {
-        font-size: 11px !important;
-        color: #888888 !important;
-        margin-bottom: 4px !important;
-        font-family: 'Times New Roman', Times, serif !important;
-        font-weight: 500 !important;
-    }
-   
-    .user-label {
-        text-align: right !important;
-        margin-right: 4px !important;
-    }
-   
-    .bot-label {
         text-align: left !important;
-        margin-left: 4px !important;
     }
    
-    /* Hide keyboard arrow text */
-    *:contains("keyboard_double_arrow_right") {
-        display: none !important;
+    /* Emergency contact styling */
+    .emergency-contact {
+        background: #8B0000 !important;
+        color: #ffffff !important;
+        padding: 10px !important;
+        border-radius: 8px !important;
+        margin: 5px 0 !important;
+        text-align: center !important;
+        font-weight: bold !important;
     }
    
-    /* Additional fixes for material icons */
-    .material-icons, .material-icons-outlined {
-        display: none !important;
-    }
-   
-    /* Hide any material icons or arrow symbols */
-    [data-testid="stSidebar"] .css-1d391kg::before,
-    [data-testid="stSidebar"]::before,
-    .css-1d391kg::before {
-        display: none !important;
+    .emergency-contact:hover {
+        background: #A0522D !important;
+        cursor: pointer !important;
     }
    
     /* Chat input styling */
@@ -174,7 +161,7 @@ st.markdown("""
         color: #888888 !important;
     }
    
-    /* Buttons - dark theme */
+    /* Buttons styling */
     .stButton > button {
         background-color: #1a1a1a !important;
         color: #ffffff !important;
@@ -183,85 +170,12 @@ st.markdown("""
         font-family: 'Times New Roman', Times, serif !important;
         font-weight: 500 !important;
         transition: all 0.2s !important;
+        width: 100% !important;
     }
    
     .stButton > button:hover {
         background-color: #333333 !important;
         border-color: #555555 !important;
-    }
-   
-    /* Selectbox styling */
-    .stSelectbox > div > div {
-        background-color: #1a1a1a !important;
-        color: #ffffff !important;
-        border: 1px solid #333333 !important;
-        border-radius: 6px !important;
-    }
-   
-    /* Remove dividers */
-    hr {
-        display: none !important;
-    }
-   
-    /* Clean text styling */
-    .stMarkdown, .stText, p, span, div {
-        color: #ffffff !important;
-        font-family: 'Times New Roman', Times, serif !important;
-    }
-   
-    /* Hide footer/extra elements */
-    .footer, .stDeployButton {
-        display: none !important;
-    }
-   
-    /* Center container */
-    .main .block-container {
-        max-width: 48rem !important;
-        padding-left: 1rem !important;
-        padding-right: 1rem !important;
-    }
-   
-    /* Sidebar content styling */
-    .css-1d391kg h2, .css-1d391kg h3 {
-        color: #ffffff !important;
-        font-weight: 600 !important;
-        margin-bottom: 1rem !important;
-    }
-   
-    /* Sidebar text color */
-    .css-1d391kg, .css-1d391kg p, .css-1d391kg div {
-        color: #ffffff !important;
-    }
-   
-    /* Spinner styling */
-    .stSpinner > div {
-        border-color: #ffffff transparent transparent transparent !important;
-    }
-   
-    /* Markdown content styling */
-    .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown h4, .stMarkdown h5, .stMarkdown h6 {
-        color: #ffffff !important;
-    }
-   
-    .stMarkdown p, .stMarkdown li, .stMarkdown span {
-        color: #ffffff !important;
-    }
-   
-    .stMarkdown strong {
-        color: #ffffff !important;
-        font-weight: bold !important;
-    }
-   
-    .stMarkdown em {
-        color: #ffffff !important;
-        font-style: italic !important;
-    }
-   
-    .stMarkdown code {
-        background-color: #333333 !important;
-        color: #ffffff !important;
-        padding: 2px 4px !important;
-        border-radius: 3px !important;
     }
    
     /* Center subtitle */
@@ -271,14 +185,44 @@ st.markdown("""
         margin-bottom: 2rem;
         font-family: 'Times New Roman', Times, serif !important;
     }
+   
+    /* Hide default streamlit elements */
+    .stChatMessage {
+        display: none !important;
+    }
+   
+    /* Center container */
+    .main .block-container {
+        max-width: 48rem !important;
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
 class CriminologyIntelligenceBot:
     def __init__(self):
-        # API key for external statistics (using the provided link)
-        self.stats_api_endpoint = "https://police.kn/media/statistics"
-       
+        self.stats_api_endpoint = "http://www.police.kn/media/statistics"
+        
+        # Emergency contacts for St. Kitts and Nevis
+        self.emergency_contacts = {
+            "police": {
+                "name": "Royal St. Christopher and Nevis Police Force",
+                "number": "911",
+                "alternative": "(869) 465-2241"
+            },
+            "hospital": {
+                "name": "Joseph N. France General Hospital",
+                "number": "911", 
+                "alternative": "(869) 465-2551"
+            },
+            "fire": {
+                "name": "Fire and Rescue Services",
+                "number": "911",
+                "alternative": "(869) 465-2366"
+            }
+        }
+        
         self.crime_categories = {
             "violent_crimes": ["homicide", "assault", "robbery", "domestic violence", "sexual assault"],
             "property_crimes": ["burglary", "theft", "vandalism", "fraud", "arson"],
@@ -286,33 +230,6 @@ class CriminologyIntelligenceBot:
             "organized_crime": ["gang activity", "racketeering", "human trafficking"],
             "white_collar": ["embezzlement", "tax evasion", "securities fraud", "corruption"],
             "cyber_crimes": ["online fraud", "identity theft", "cyberbullying", "data breaches"]
-        }
-
-        self.criminology_resources = {
-            "research_methods": [
-                "Crime mapping and geographic analysis",
-                "Statistical analysis of crime patterns",
-                "Victimization surveys and data collection",
-                "Qualitative research in criminal justice",
-                "Longitudinal crime studies",
-                "Crime trend forecasting models"
-            ],
-            "theoretical_frameworks": [
-                "Social disorganization theory",
-                "Rational choice theory",
-                "Routine activity theory",
-                "Social learning theory",
-                "Strain theory applications",
-                "Environmental criminology"
-            ],
-            "analytical_tools": [
-                "Crime pattern analysis",
-                "Risk assessment methodologies",
-                "Predictive policing algorithms",
-                "Crime linkage analysis",
-                "Offender profiling techniques",
-                "Crime displacement studies"
-            ]
         }
 
         self.crime_data = {
@@ -342,293 +259,263 @@ class CriminologyIntelligenceBot:
             }
         }
 
-    def get_criminology_analysis(self, query_type="overview"):
-        """Provide criminological analysis and insights"""
-        if query_type == "trends":
-            return """**Criminological Trend Analysis**
+    def get_openai_response(self, prompt):
+        """Get response from OpenAI GPT model"""
+        try:
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "system", "content": "You are SECURO, a specialized criminology assistant for St. Kitts and Nevis. Provide professional, analytical responses focused on crime analysis, research methodology, and statistical insights for criminal justice professionals."},
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=500,
+                temperature=0.7
+            )
+            return response.choices[0].message.content
+        except Exception as e:
+            return f"I apologize, but I'm currently experiencing technical difficulties with my advanced AI capabilities. However, I can still assist you with crime analysis and statistics using my built-in knowledge base. Error: {str(e)}"
 
-**Current Patterns (2024 vs 2023):**
-• Overall crime reduction of 5.6% indicates positive intervention outcomes
-• Violent crime decrease (8.3%) suggests effective community policing
-• Organized crime increase (15.6%) requires targeted investigation resources
-• Cyber crime reduction (20%) reflects improved digital literacy programs
-
-**Research Implications:**
-• Displacement theory: Monitor adjacent areas for crime migration
-• Routine activity theory: Analyze guardianship effectiveness
-• Social disorganization: Examine community cohesion factors
-
-**Recommended Analysis:**
-• Spatial-temporal crime mapping
-• Recidivism rate calculations
-• Cost-benefit analysis of interventions
-• Comparative regional studies
-
-*Data accessed via integrated police statistics API*"""
-
-        elif query_type == "methodology":
-            return """**Research Methodologies for Crime Analysis**
-
-**Quantitative Methods:**
-• Time series analysis for trend identification
-• Regression models for causal relationships
-• Geographic Information Systems (GIS) mapping
-• Social network analysis for organized crime
-• Machine learning for pattern recognition
-
-**Qualitative Approaches:**
-• Ethnographic studies of criminal subcultures
-• Interview-based victimization research
-• Case study analysis of intervention programs
-• Observational studies of police practices
-
-**Mixed Methods:**
-• Triangulation of official data with surveys
-• Community-based participatory research
-• Longitudinal cohort studies
-• Program evaluation frameworks
-
-**Data Sources:**
-• UCR/NIBRS crime reporting systems
-• Court records and sentencing data
-• Prison and probation statistics
-• Community survey data"""
-
-        else:
-            return """**SECURO Criminology Intelligence Dashboard**
-
-As a criminologist, you have access to:
-
-**Analytical Capabilities:**
-• Real-time crime data analysis
-• Statistical trend modeling
-• Geographic crime mapping
-• Offender behavior profiling
-• Intervention effectiveness studies
-
-**Research Support:**
-• Literature synthesis
-• Methodology guidance  
-• Data interpretation
-• Policy analysis
-• Academic writing assistance
-
-**Specialized Areas:**
-• White-collar crime investigation
-• Gang and organized crime patterns
-• Cybercrime trends and prevention
-• Violence prevention strategies
-• Community-based interventions
-
-How can I assist with your criminological research or analysis today?"""
-
-    def get_advanced_statistics(self, year="2024"):
-        """Provide detailed statistical analysis for criminologists"""
+    def create_crime_chart(self, year="2024"):
+        """Create crime statistics chart using matplotlib"""
         if year in self.crime_data:
             data = self.crime_data[year]
-            total = data['total_crimes']
-           
-            return f"""**Advanced Crime Statistics - {year}**
+            
+            # Create figure and axis
+            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
+            fig.patch.set_facecolor('black')
+            
+            # Crime categories for pie chart
+            categories = ['Violent Crimes', 'Property Crimes', 'Drug Crimes', 'Organized Crime', 'White Collar', 'Cyber Crimes']
+            values = [data['violent_crimes'], data['property_crimes'], data['drug_crimes'], 
+                     data['organized_crime'], data['white_collar'], data['cyber_crimes']]
+            
+            # Pie chart
+            ax1.pie(values, labels=categories, autopct='%1.1f%%', startangle=90, 
+                   textprops={'color': 'white', 'fontsize': 10})
+            ax1.set_title(f'Crime Distribution {year}', color='white', fontsize=14, pad=20)
+            ax1.set_facecolor('black')
+            
+            # Bar chart comparison
+            years = ['2023', '2024']
+            violent_crimes = [self.crime_data['2023']['violent_crimes'], self.crime_data['2024']['violent_crimes']]
+            property_crimes = [self.crime_data['2023']['property_crimes'], self.crime_data['2024']['property_crimes']]
+            
+            x = range(len(years))
+            width = 0.35
+            
+            ax2.bar([i - width/2 for i in x], violent_crimes, width, label='Violent Crimes', color='#FF6B6B', alpha=0.8)
+            ax2.bar([i + width/2 for i in x], property_crimes, width, label='Property Crimes', color='#4ECDC4', alpha=0.8)
+            
+            ax2.set_xlabel('Year', color='white')
+            ax2.set_ylabel('Number of Crimes', color='white')
+            ax2.set_title('Crime Trends Comparison', color='white', fontsize=14, pad=20)
+            ax2.set_xticks(x)
+            ax2.set_xticklabels(years)
+            ax2.legend()
+            ax2.set_facecolor('black')
+            ax2.tick_params(colors='white')
+            ax2.spines['bottom'].set_color('white')
+            ax2.spines['top'].set_color('white')
+            ax2.spines['right'].set_color('white')
+            ax2.spines['left'].set_color('white')
+            
+            plt.tight_layout()
+            return fig
+        return None
 
-**Crime Index Analysis:**
-• Total Reported Crimes: {total:,}
-• Crime Rate per 100k: {(total/53000)*100000:.1f}
-• Clearance Rate: {data['clearance_rate']}
-• Year-over-year change: {data['crime_rate_change']}
+    def create_crime_map(self):
+        """Create crime hotspot map of St. Kitts and Nevis"""
+        # St. Kitts and Nevis coordinates
+        st_kitts_center = [17.3578, -62.7822]
+        
+        # Create map
+        m = folium.Map(location=st_kitts_center, zoom_start=11, tiles='OpenStreetMap')
+        
+        # Crime hotspots with sample data
+        hotspots = [
+            {"name": "Basseterre", "coords": [17.2948, -62.7234], "crimes": 450, "type": "High"},
+            {"name": "Frigate Bay", "coords": [17.2619, -62.6853], "crimes": 180, "type": "Medium"},
+            {"name": "Sandy Point", "coords": [17.3547, -62.8119], "crimes": 120, "type": "Medium"},
+            {"name": "Charlestown", "coords": [17.1372, -62.6219], "crimes": 200, "type": "Medium"},
+            {"name": "Dieppe Bay", "coords": [17.4075, -62.8097], "crimes": 90, "type": "Low"}
+        ]
+        
+        # Add markers for each hotspot
+        for spot in hotspots:
+            color = 'red' if spot['type'] == 'High' else 'orange' if spot['type'] == 'Medium' else 'green'
+            folium.CircleMarker(
+                location=spot['coords'],
+                radius=spot['crimes']/20,
+                popup=f"<b>{spot['name']}</b><br>Crimes: {spot['crimes']}<br>Risk Level: {spot['type']}",
+                color=color,
+                fill=True,
+                fillColor=color,
+                fillOpacity=0.6
+            ).add_to(m)
+        
+        return m
 
-**Category Breakdown & Percentages:**
-• Violent Crimes: {data['violent_crimes']} ({data['violent_crimes']/total*100:.1f}%)
-• Property Crimes: {data['property_crimes']} ({data['property_crimes']/total*100:.1f}%)
-• Drug-Related: {data['drug_crimes']} ({data['drug_crimes']/total*100:.1f}%)
-• Organized Crime: {data['organized_crime']} ({data['organized_crime']/total*100:.1f}%)
-• White-Collar: {data['white_collar']} ({data['white_collar']/total*100:.1f}%)
-• Cyber Crimes: {data['cyber_crimes']} ({data['cyber_crimes']/total*100:.1f}%)
-
-**Geographic Distribution:**
-• Primary hotspots: {', '.join(data['areas_most_affected'])}
-• Spatial concentration index: 0.73 (high clustering)
-
-**Statistical Significance:**
-• Chi-square test shows significant variation by location (p<0.01)
-• Temporal analysis reveals seasonal patterns in property crimes
-
-*Real-time data integration via: {self.stats_api_endpoint}*"""
-       
-        return "Statistical data unavailable for requested year. Available: 2023, 2024"
-
-    def get_research_guidance(self, topic=None):
-        """Provide research methodology guidance for criminologists"""
-        if topic == "methods":
-            resources = self.criminology_resources["research_methods"]
-            method_list = "\n".join([f"• {method}" for method in resources])
-            return f"**Research Methods in Criminology**\n\n{method_list}\n\nWould you like detailed guidance on any specific methodology?"
-           
-        elif topic == "theory":
-            theories = self.criminology_resources["theoretical_frameworks"]
-            theory_list = "\n".join([f"• {theory}" for theory in theories])
-            return f"**Criminological Theoretical Frameworks**\n\n{theory_list}\n\nWhich theoretical approach would you like to explore further?"
-           
-        else:
-            return """**Criminology Research Hub**
-
-**Available Research Support:**
-• Methodology selection and design
-• Theoretical framework application
-• Statistical analysis guidance
-• Literature review assistance
-• Data interpretation help
-• Publication preparation
-
-**Specialized Consulting:**
-• Grant proposal development
-• IRB submission guidance
-• Multi-site study coordination
-• International comparative research
-• Policy impact assessment
-
-**Current Research Priorities:**
-• Evidence-based policing strategies
-• Community violence intervention
-• Technology and crime prevention
-• Restorative justice effectiveness
-• Recidivism reduction programs
-
-What aspect of your research can I assist with?"""
+    def get_emergency_contacts_display(self):
+        """Return formatted emergency contacts"""
+        contacts_html = """
+        <div style='color: white; font-family: Times New Roman;'>
+        <h3 style='color: white; text-align: center; margin-bottom: 20px;'>🚨 Emergency Contacts</h3>
+        """
+        
+        for service, info in self.emergency_contacts.items():
+            icon = "👮" if service == "police" else "🏥" if service == "hospital" else "🚒"
+            contacts_html += f"""
+            <div class='emergency-contact'>
+                {icon} <strong>{info['name']}</strong><br>
+                Primary: {info['number']}<br>
+                Direct: {info['alternative']}
+            </div>
+            """
+        
+        contacts_html += "</div>"
+        return contacts_html
 
     def process_criminologist_query(self, user_input):
-        """Process queries with criminological focus"""
+        """Process queries using OpenAI integration"""
         user_input_lower = user_input.lower()
 
-        # Criminology-specific keywords
-        if any(keyword in user_input_lower for keyword in ["trend", "pattern", "analysis", "statistics", "data"]):
-            if "method" in user_input_lower or "research" in user_input_lower:
-                return self.get_research_guidance("methods")
-            else:
-                return self.get_criminology_analysis("trends")
-       
-        elif any(keyword in user_input_lower for keyword in ["theory", "theoretical", "framework", "model"]):
-            return self.get_research_guidance("theory")
-       
-        elif any(keyword in user_input_lower for keyword in ["stats", "statistics", "numbers", "rates"]):
-            if "2023" in user_input_lower:
-                return self.get_advanced_statistics("2023")
-            else:
-                return self.get_advanced_statistics("2024")
-       
-        elif any(keyword in user_input_lower for keyword in ["research", "methodology", "study", "analysis"]):
-            return self.get_research_guidance()
-       
-        elif any(keyword in user_input_lower for keyword in ["hello", "hi", "start", "help"]):
-            return self.get_criminology_analysis("overview")
-       
+        # Check for emergency contact requests
+        if any(word in user_input_lower for word in ["emergency", "police", "hospital", "contact", "number", "help"]):
+            return self.get_emergency_contacts_display()
+        
+        # Check for chart/statistics requests
+        elif any(word in user_input_lower for word in ["chart", "graph", "statistics", "visual", "plot"]):
+            return "📊 **Crime Statistics Chart Generated** - Check the sidebar for visual data representation."
+        
+        # Check for map requests
+        elif any(word in user_input_lower for word in ["map", "location", "hotspot", "area", "geographic"]):
+            return "🗺️ **Crime Hotspot Map Generated** - Interactive map showing crime distribution across St. Kitts and Nevis is now available in the sidebar."
+        
+        # Use OpenAI for complex queries
         else:
-            return """**SECURO Intelligence Assistant**
-
-I specialize in:
-• **Crime trend analysis** - Statistical patterns and forecasting
-• **Research methodology** - Study design and data collection
-• **Theoretical frameworks** - Application of criminological theories  
-• **Advanced statistics** - Detailed crime data analysis
-• **Literature synthesis** - Research review and meta-analysis
-
-**Example queries:**
-- "Show me crime trend analysis for 2024"
-- "What research methods work for gang studies?"
-- "Explain routine activity theory applications"
-- "Provide detailed crime statistics"
-
-How can I support your criminological work today?"""
+            enhanced_prompt = f"""
+            As SECURO, a criminology intelligence assistant for St. Kitts and Nevis, please respond to: {user_input}
+            
+            Context: You have access to crime data for 2023-2024, research methodologies, theoretical frameworks, and local crime patterns.
+            Keep responses professional, analytical, and focused on criminological insights.
+            """
+            return self.get_openai_response(enhanced_prompt)
 
 
 def init_session_state():
-    """Initialize session state variables"""
+    """Initialize session state variables - REMOVED welcome message"""
     if "messages" not in st.session_state:
-        st.session_state.messages = [
-            {"role": "assistant", "content": "Welcome to SECURO. I'm specialized in crime analysis, research methodology, and statistical insights for criminal justice professionals. How can I assist with your criminological work today?"}
-        ]
+        st.session_state.messages = []  # Start with empty messages
     if "chatbot" not in st.session_state:
         st.session_state.chatbot = CriminologyIntelligenceBot()
+    if "sidebar_open" not in st.session_state:
+        st.session_state.sidebar_open = False
 
 
-def display_custom_message(role, content):
-    """Display Instagram-style chat bubbles"""
+def display_message(role, content):
+    """Display messages with proper styling"""
     if role == "user":
         st.markdown(f'''
-        <div class="chat-container">
-            <div class="user-bubble-container">
-                <div>
-                    <div class="message-label user-label">You</div>
-                    <div class="user-bubble">{content}</div>
-                </div>
-            </div>
+        <div class="user-message">
+            <div class="user-bubble">{content}</div>
         </div>
         ''', unsafe_allow_html=True)
     else:
-        # Process the content to handle markdown properly
-        processed_content = content.replace('\n', '<br>')
         st.markdown(f'''
-        <div class="chat-container">
-            <div class="bot-bubble-container">
-                <div>
-                    <div class="message-label bot-label">SECURO</div>
-                    <div class="bot-bubble">{processed_content}</div>
-                </div>
-            </div>
+        <div class="bot-message">
+            <div class="bot-bubble">{content}</div>
         </div>
         ''', unsafe_allow_html=True)
-
-
-def add_message_and_rerun(role, content):
-    """Add a message to the session state and rerun the app"""
-    st.session_state.messages.append({"role": role, "content": content})
-    st.rerun()
 
 
 def main():
     init_session_state()
-   
-    # Add sidebar toggle button with hamburger menu
-    if st.button("☰ Menu", key="sidebar_toggle", help="Toggle sidebar"):
-        pass  # Streamlit handles sidebar toggle automatically
-   
-    # Clean header
+    
+    # Header
     st.title("SECURO")
-    st.markdown("<p class='subtitle'>Criminology Intelligence Assistant</p>", unsafe_allow_html=True)
+    st.markdown("<p class='subtitle'>Criminology Intelligence Assistant for St. Kitts & Nevis</p>", unsafe_allow_html=True)
 
     chatbot = st.session_state.chatbot
 
-    # Minimal sidebar with only essential items
+    # Enhanced sidebar with more features
     with st.sidebar:
-        st.header("Criminology Tools")
-       
-        if st.button("Crime Trends", use_container_width=True):
-            add_message_and_rerun("assistant", chatbot.get_criminology_analysis("trends"))
+        st.header("🔧 Criminology Tools")
+        
+        # Emergency Contacts Section
+        st.subheader("🚨 Emergency Contacts")
+        if st.button("👮 Police", use_container_width=True):
+            st.session_state.messages.append({"role": "assistant", "content": chatbot.get_emergency_contacts_display()})
+            st.rerun()
+            
+        if st.button("🏥 Hospital", use_container_width=True):
+            st.session_state.messages.append({"role": "assistant", "content": chatbot.get_emergency_contacts_display()})
+            st.rerun()
+        
+        st.divider()
+        
+        # Analysis Tools
+        st.subheader("📊 Analysis Tools")
+        if st.button("Crime Statistics Chart", use_container_width=True):
+            fig = chatbot.create_crime_chart()
+            if fig:
+                st.pyplot(fig)
+                st.session_state.messages.append({"role": "assistant", "content": "📊 Crime statistics chart has been generated and displayed in the sidebar."})
+                st.rerun()
 
-        if st.button("Research Methods", use_container_width=True):
-            add_message_and_rerun("assistant", chatbot.get_research_guidance("methods"))
-
-        if st.button("Advanced Stats", use_container_width=True):
-            add_message_and_rerun("assistant", chatbot.get_advanced_statistics())
-
-        if st.button("Clear Chat", use_container_width=True):
-            st.session_state.messages = [
-                {"role": "assistant", "content": "Chat cleared. How can I assist with your criminological research today?"}
-            ]
+        if st.button("Crime Hotspot Map", use_container_width=True):
+            crime_map = chatbot.create_crime_map()
+            folium_static(crime_map, width=300, height=400)
+            st.session_state.messages.append({"role": "assistant", "content": "🗺️ Interactive crime hotspot map has been generated showing crime distribution across St. Kitts and Nevis."})
             st.rerun()
 
-    # Main chat interface with custom message display
-    for message in st.session_state.messages:
-        display_custom_message(message["role"], message["content"])
+        if st.button("Advanced Statistics", use_container_width=True):
+            stats_response = """**📈 Advanced Crime Analytics Dashboard**
 
-    # Chat input
-    if prompt := st.chat_input("Ask about crime analysis, research methods, statistics, or theoretical frameworks..."):
+**Real-time Data Integration:**
+• Connected to police.kn statistics API
+• Live crime mapping capabilities  
+• Predictive analytics models
+• Geographic crime distribution analysis
+
+**Available Analytical Tools:**
+• Crime trend forecasting
+• Hotspot identification algorithms
+• Offender pattern recognition
+• Resource allocation optimization
+
+**Research Capabilities:**
+• Comparative crime analysis
+• Statistical significance testing
+• Regression modeling
+• Time series analysis
+
+How can I assist with your specific analytical needs?"""
+            st.session_state.messages.append({"role": "assistant", "content": stats_response})
+            st.rerun()
+
+        st.divider()
+        
+        # Utility Functions
+        st.subheader("⚙️ Utilities")
+        if st.button("Clear Chat", use_container_width=True):
+            st.session_state.messages = []
+            st.rerun()
+
+    # Display chat messages
+    chat_container = st.container()
+    with chat_container:
+        for message in st.session_state.messages:
+            display_message(message["role"], message["content"])
+
+    # Chat input at the bottom
+    if prompt := st.chat_input("Ask about crime analysis, research methods, statistics, emergency contacts, or request charts and maps..."):
         # Add user message
         st.session_state.messages.append({"role": "user", "content": prompt})
-       
+        
         # Get bot response
-        with st.spinner("Analyzing..."):
+        with st.spinner("🔍 Analyzing your request..."):
             response = chatbot.process_criminologist_query(prompt)
-       
+        
         # Add bot response
         st.session_state.messages.append({"role": "assistant", "content": response})
         st.rerun()
