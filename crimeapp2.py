@@ -1,7 +1,6 @@
 import streamlit as st
 import datetime
 import json
-import openai
 import requests
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -256,21 +255,72 @@ class CriminologyIntelligenceBot:
             }
         }
 
-    def get_openai_response(self, prompt):
-        """Get response from OpenAI GPT model"""
-        try:
-            response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
-                messages=[
-                    {"role": "system", "content": "You are SECURO, a specialized criminology assistant for St. Kitts and Nevis. Provide professional, analytical responses focused on crime analysis, research methodology, and statistical insights for criminal justice professionals."},
-                    {"role": "user", "content": prompt}
-                ],
-                max_tokens=500,
-                temperature=0.7
-            )
-            return response.choices[0].message.content
-        except Exception as e:
-            return f"I apologize, but I'm currently experiencing technical difficulties with my advanced AI capabilities. However, I can still assist you with crime analysis and statistics using my built-in knowledge base. Error: {str(e)}"
+    def get_basic_response(self, prompt):
+        """Get basic response without OpenAI"""
+        user_input_lower = prompt.lower()
+        
+        # Crime analysis responses
+        if any(word in user_input_lower for word in ["crime", "analysis", "trend", "pattern"]):
+            return """Based on our 2024 crime data for St. Kitts and Nevis:
+
+- Total crimes decreased by 5.6% from 2023 to 2024 (1,180 total cases)
+- Property crimes remain the highest category (590 cases)
+- Violent crimes showed a decline (165 cases vs 180 in 2023)
+- Clearance rate improved to 71.8%
+- Most affected areas: Basseterre, Charlestown, Dieppe Bay
+
+I can provide more specific analysis on any crime category you're interested in."""
+
+        elif any(word in user_input_lower for word in ["methodology", "research", "study"]):
+            return """For criminological research in St. Kitts and Nevis, I recommend:
+
+**Quantitative Methods:**
+- Statistical analysis of crime patterns
+- Time series analysis for trend identification
+- Geographic information systems (GIS) mapping
+- Regression analysis for causal factors
+
+**Qualitative Methods:**
+- Community surveys and interviews
+- Focus groups with law enforcement
+- Case study analysis
+- Ethnographic observations
+
+**Data Sources:**
+- Police incident reports
+- Court records
+- Community surveys
+- Economic indicators
+
+What specific research question are you investigating?"""
+
+        elif any(word in user_input_lower for word in ["theory", "theoretical", "framework"]):
+            return """Key criminological theories applicable to Caribbean crime patterns:
+
+**Social Disorganization Theory:** Examines how community structure affects crime rates
+**Strain Theory:** Analyzes the gap between cultural goals and legitimate means
+**Social Learning Theory:** Studies how criminal behavior is learned through social interaction
+**Routine Activities Theory:** Focuses on crime opportunities based on daily activities
+
+**Caribbean-Specific Considerations:**
+- Economic dependency and development patterns
+- Migration and diaspora effects
+- Tourism industry impacts
+- Colonial legacy influences
+
+Which theoretical framework interests you most?"""
+
+        else:
+            return """I'm SECURO, your criminology intelligence assistant for St. Kitts and Nevis. I can help with:
+
+- Crime statistics and trend analysis
+- Research methodologies
+- Theoretical frameworks
+- Emergency contacts
+- Geographic crime mapping
+- Statistical analysis
+
+What would you like to explore?"""
 
     def create_crime_chart(self, year="2024"):
         """Create crime statistics chart using matplotlib"""
@@ -353,25 +403,25 @@ class CriminologyIntelligenceBot:
         return m
 
     def get_emergency_contacts_display(self):
-        """Return formatted emergency contacts as text for proper display"""
-        contacts_text = """**Emergency Contacts**
+        """Return formatted emergency contacts as markdown text"""
+        return """**🚨 EMERGENCY CONTACTS**
 
-**Police**
+**POLICE**
 Royal St. Christopher and Nevis Police Force
-Primary: 911
-Direct: (869) 465-2241
+• Emergency: **911**
+• Direct Line: **(869) 465-2241**
 
-**Hospital**
+**HOSPITAL**
 Joseph N. France General Hospital
-Primary: 911
-Direct: (869) 465-2551
+• Emergency: **911**
+• Direct Line: **(869) 465-2551**
 
-**Fire Department**
+**FIRE & RESCUE**
 Fire and Rescue Services
-Primary: 911
-Direct: (869) 465-2366
-"""
-        return contacts_text
+• Emergency: **911**
+• Direct Line: **(869) 465-2366**
+
+*All emergency services can be reached by dialing 911*"""
 
     def process_criminologist_query(self, user_input):
         """Process queries using OpenAI integration"""
@@ -389,7 +439,7 @@ Direct: (869) 465-2366
         elif any(word in user_input_lower for word in ["map", "location", "hotspot", "area", "geographic"]):
             return "Crime Hotspot Map Generated - Interactive map showing crime distribution across St. Kitts and Nevis is now available in the sidebar."
         
-        # Use OpenAI for complex queries
+        # Use built-in response system for complex queries
         else:
             enhanced_prompt = f"""
             As SECURO, a criminology intelligence assistant for St. Kitts and Nevis, please respond to: {user_input}
@@ -397,7 +447,7 @@ Direct: (869) 465-2366
             Context: You have access to crime data for 2023-2024, research methodologies, theoretical frameworks, and local crime patterns.
             Keep responses professional, analytical, and focused on criminological insights.
             """
-            return self.get_openai_response(enhanced_prompt)
+            return self.get_basic_response(enhanced_prompt)
 
 
 def init_session_state():
