@@ -17,7 +17,7 @@ st.set_page_config(
     menu_items=None
 )
 
-# Enhanced CSS with emergency contact styling
+# Custom CSS for black theme with fixed chat bubbles
 st.markdown("""
 <style>
     /* Black theme with Times New Roman font */
@@ -124,85 +124,20 @@ st.markdown("""
         text-align: left !important;
     }
    
-    /* Enhanced Emergency contact styling */
-    .emergency-phone-link {
-        display: block !important;
+    /* Emergency contact styling */
+    .emergency-contact {
         background: #8B0000 !important;
-        color: #ffffff !important;
-        padding: 12px 16px !important;
-        border-radius: 8px !important;
-        text-decoration: none !important;
-        text-align: center !important;
-        font-weight: bold !important;
-        margin: 5px 0 !important;
-        border: 2px solid #FF0000 !important;
-        transition: all 0.3s ease !important;
-        font-family: 'Times New Roman', Times, serif !important;
-    }
-
-    .emergency-phone-link:hover {
-        background: #FF0000 !important;
-        border-color: #FF4444 !important;
-        transform: scale(1.02) !important;
-        text-decoration: none !important;
-        color: #ffffff !important;
-    }
-
-    .emergency-phone-link:active {
-        transform: scale(0.98) !important;
-    }
-
-    .emergency-phone-link:visited {
-        color: #ffffff !important;
-    }
-
-    /* Location sharing button */
-    .location-share-btn {
-        background: #2E8B57 !important;
-        color: #ffffff !important;
-        padding: 10px 14px !important;
-        border-radius: 6px !important;
-        text-decoration: none !important;
-        text-align: center !important;
-        font-weight: bold !important;
-        margin: 5px 0 !important;
-        border: 2px solid #32CD32 !important;
-        display: block !important;
-        cursor: pointer !important;
-        font-family: 'Times New Roman', Times, serif !important;
-    }
-
-    .location-share-btn:hover {
-        background: #32CD32 !important;
-        border-color: #90EE90 !important;
-    }
-
-    /* Emergency info display */
-    .emergency-info-box {
-        background: #8B0000 !important;
-        color: #ffffff !important;
-        padding: 15px !important;
-        border-radius: 10px !important;
-        margin: 10px 0 !important;
-        border: 2px solid #FF0000 !important;
-        font-family: 'Times New Roman', Times, serif !important;
-    }
-
-    /* Calling indicator */
-    .calling-indicator {
-        background: #FF4500 !important;
         color: #ffffff !important;
         padding: 10px !important;
         border-radius: 8px !important;
+        margin: 5px 0 !important;
         text-align: center !important;
         font-weight: bold !important;
-        animation: pulse 1.5s infinite !important;
     }
-
-    @keyframes pulse {
-        0% { opacity: 1; }
-        50% { opacity: 0.7; }
-        100% { opacity: 1; }
+   
+    .emergency-contact:hover {
+        background: #A0522D !important;
+        cursor: pointer !important;
     }
    
     /* Chat input styling */
@@ -286,94 +221,39 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Add JavaScript for enhanced emergency features
-st.markdown("""
-<script>
-function shareLocationWithEmergency() {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(function(position) {
-            const lat = position.coords.latitude;
-            const lng = position.coords.longitude;
-            const accuracy = position.coords.accuracy;
-            
-            const locationMessage = `EMERGENCY LOCATION:
-Latitude: ${lat}
-Longitude: ${lng}
-Accuracy: ${accuracy} meters
-Google Maps: https://maps.google.com/?q=${lat},${lng}`;
-            
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(locationMessage).then(function() {
-                    alert("Location copied to clipboard! Share with emergency services.");
-                });
-            } else {
-                // Fallback for older browsers
-                const textArea = document.createElement("textarea");
-                textArea.value = locationMessage;
-                document.body.appendChild(textArea);
-                textArea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textArea);
-                alert("Location copied to clipboard! Share with emergency services.");
-            }
-        }, function(error) {
-            alert("Unable to get location: " + error.message);
-        });
-    } else {
-        alert("Geolocation is not supported by this browser.");
-    }
-}
-
-function showCallingIndicator(service, number) {
-    const indicator = document.createElement('div');
-    indicator.className = 'calling-indicator';
-    indicator.innerHTML = `📞 Calling ${service} at ${number}...`;
-    indicator.id = 'calling-status';
-    
-    document.body.appendChild(indicator);
-    
-    setTimeout(function() {
-        if (document.getElementById('calling-status')) {
-            document.body.removeChild(indicator);
-        }
-    }, 3000);
-}
-</script>
-""", unsafe_allow_html=True)
-
 class UserAuthentication:
     def __init__(self):
         # Initialize user database in session state
         if "users_db" not in st.session_state:
             st.session_state.users_db = {}
-        
+       
     def hash_password(self, password):
         """Hash password for security"""
         return hashlib.sha256(password.encode()).hexdigest()
-    
+   
     def create_account(self, username, password, role):
         """Create new user account"""
         if username in st.session_state.users_db:
             return False, "Username already exists"
-        
+       
         if len(password) < 6:
             return False, "Password must be at least 6 characters"
-        
+       
         st.session_state.users_db[username] = {
             "password": self.hash_password(password),
             "role": role,
             "created": datetime.datetime.now().isoformat()
         }
         return True, "Account created successfully"
-    
+   
     def login(self, username, password):
         """Authenticate user login"""
         if username not in st.session_state.users_db:
             return False, "Username not found"
-        
+       
         if st.session_state.users_db[username]["password"] != self.hash_password(password):
             return False, "Invalid password"
-        
+       
         st.session_state.logged_in = True
         st.session_state.current_user = username
         st.session_state.user_role = st.session_state.users_db[username]["role"]
@@ -383,12 +263,12 @@ class GeminiAPI:
     def __init__(self):
         # Hardcoded API key
         self.api_key = "AIzaSyCsb-NiyZwU5J-AitQan9HaHzNse2kN5_c"
-        
+       
     def get_gemini_response(self, prompt):
         """Gets a response from the Gemini API."""
         try:
             API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key={self.api_key}"
-            
+           
             payload = {
                 "contents": [{"parts": [{"text": prompt}]}],
                 "generationConfig": {
@@ -398,11 +278,11 @@ class GeminiAPI:
                     "maxOutputTokens": 1024,
                 }
             }
-            
+           
             headers = {"Content-Type": "application/json"}
-            
+           
             response = requests.post(API_URL, headers=headers, json=payload, timeout=30)
-            
+           
             if response.status_code == 200:
                 response_data = response.json()
                 if 'candidates' in response_data and len(response_data['candidates']) > 0:
@@ -416,7 +296,7 @@ class GeminiAPI:
                 return "⚠️ **API Access Denied** ⚠️\n\nAPI key doesn't have permission or quota exceeded. Please check your Google AI Studio settings."
             else:
                 return f"⚠️ **API Error** ⚠️\n\nReceived status code {response.status_code}. Please try again later."
-                
+               
         except requests.exceptions.Timeout:
             return "⚠️ **Request Timeout** ⚠️\n\nThe API request timed out. Please try again."
         except requests.exceptions.RequestException as e:
@@ -428,32 +308,29 @@ class CriminologyIntelligenceBot:
     def __init__(self):
         self.stats_api_endpoint = "http://www.police.kn/media/statistics"
         self.gemini_api = GeminiAPI()
-        
-        # Enhanced emergency contacts for St. Kitts and Nevis
+       
+        # Emergency contacts for St. Kitts and Nevis
         self.emergency_contacts = {
             "police": {
                 "name": "Royal St. Christopher and Nevis Police Force",
-                "emergency": "911",
-                "direct": "(869) 465-2241",
-                "icon": "🚔",
+                "number": "911",
+                "alternative": "(869) 465-2241",
                 "warning": "⚠️ **EMERGENCY POLICE CONTACT** ⚠️\n\nYou are about to contact the police emergency services.\n\n**Service:** Royal St. Christopher and Nevis Police Force\n**Number:** 911\n**Direct Line:** (869) 465-2241\n\n**Use for:** Life-threatening emergencies, crimes in progress, immediate danger\n\nDo you want to proceed with this emergency contact?"
             },
             "hospital": {
                 "name": "Joseph N. France General Hospital",
-                "emergency": "911", 
-                "direct": "(869) 465-2551",
-                "icon": "🏥",
+                "number": "911",
+                "alternative": "(869) 465-2551",
                 "warning": "🏥 **EMERGENCY MEDICAL CONTACT** 🏥\n\nYou are about to contact emergency medical services.\n\n**Service:** Joseph N. France General Hospital\n**Number:** 911\n**Direct Line:** (869) 465-2551\n\n**Use for:** Medical emergencies, life-threatening injuries, urgent health situations\n\nDo you want to proceed with this emergency contact?"
             },
             "fire": {
                 "name": "Fire and Rescue Services",
-                "emergency": "911",
-                "direct": "(869) 465-2366",
-                "icon": "🚒",
+                "number": "911",
+                "alternative": "(869) 465-2366",
                 "warning": "🚒 **EMERGENCY FIRE & RESCUE CONTACT** 🚒\n\nYou are about to contact fire and rescue services.\n\n**Service:** Fire and Rescue Services\n**Number:** 911\n**Direct Line:** (869) 465-2366\n\n**Use for:** Fires, rescues, hazardous material incidents, natural disasters\n\nDo you want to proceed with this emergency contact?"
             }
         }
-        
+       
         self.crime_categories = {
             "violent_crimes": ["homicide", "assault", "robbery", "domestic violence", "sexual assault"],
             "property_crimes": ["burglary", "theft", "vandalism", "fraud", "arson"],
@@ -489,43 +366,6 @@ class CriminologyIntelligenceBot:
                 "crime_rate_change": "-5.6%"
             }
         }
-
-    def create_enhanced_emergency_contact_section(self):
-        """Create enhanced emergency contact section with clickable phone links"""
-        st.subheader("🚨 Emergency Contacts")
-        
-        for service_key, contact in self.emergency_contacts.items():
-            st.markdown(f"""
-            <div style="margin: 15px 0; padding: 10px; border: 1px solid #333; border-radius: 8px;">
-                <h4 style="color: white; margin: 5px 0; text-align: center;">{contact['icon']} {contact['name']}</h4>
-                <a href="tel:{contact['emergency']}" class="emergency-phone-link" onclick="showCallingIndicator('{contact['name']}', '{contact['emergency']}')">
-                    📞 CALL {contact['emergency']} (Emergency)
-                </a>
-                <a href="tel:{contact['direct']}" class="emergency-phone-link" onclick="showCallingIndicator('{contact['name']}', '{contact['direct']}')">
-                    📞 CALL {contact['direct']} (Direct)
-                </a>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        # SMS Emergency option
-        st.markdown("### 📱 Emergency SMS")
-        st.markdown("""
-        <div style="margin: 10px 0;">
-            <a href="sms:911?body=EMERGENCY:%20Need%20immediate%20assistance%20at%20[YOUR%20LOCATION].%20Please%20respond%20immediately." class="emergency-phone-link">
-                💬 SMS Emergency Services (911)
-            </a>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # Location sharing
-        st.markdown("### 📍 Location Sharing")
-        st.markdown("""
-        <div style="margin: 10px 0;">
-            <button onclick="shareLocationWithEmergency()" class="location-share-btn">
-                📍 Share My Location for Emergency
-            </button>
-        </div>
-        """, unsafe_allow_html=True)
 
     def create_criminology_prompt(self, user_input):
         """Create a specialized prompt for criminology queries"""
@@ -586,33 +426,33 @@ Please provide a comprehensive, professional response that demonstrates deep cri
         """Create crime statistics chart using matplotlib"""
         if year in self.crime_data:
             data = self.crime_data[year]
-            
+           
             # Create figure and axis
             fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
             fig.patch.set_facecolor('black')
-            
+           
             # Crime categories for pie chart
             categories = ['Violent Crimes', 'Property Crimes', 'Drug Crimes', 'Organized Crime', 'White Collar', 'Cyber Crimes']
-            values = [data['violent_crimes'], data['property_crimes'], data['drug_crimes'], 
+            values = [data['violent_crimes'], data['property_crimes'], data['drug_crimes'],
                      data['organized_crime'], data['white_collar'], data['cyber_crimes']]
-            
+           
             # Pie chart
-            ax1.pie(values, labels=categories, autopct='%1.1f%%', startangle=90, 
+            ax1.pie(values, labels=categories, autopct='%1.1f%%', startangle=90,
                    textprops={'color': 'white', 'fontsize': 10})
             ax1.set_title(f'Crime Distribution {year}', color='white', fontsize=14, pad=20)
             ax1.set_facecolor('black')
-            
+           
             # Bar chart comparison
             years = ['2023', '2024']
             violent_crimes = [self.crime_data['2023']['violent_crimes'], self.crime_data['2024']['violent_crimes']]
             property_crimes = [self.crime_data['2023']['property_crimes'], self.crime_data['2024']['property_crimes']]
-            
+           
             x = range(len(years))
             width = 0.35
-            
+           
             ax2.bar([i - width/2 for i in x], violent_crimes, width, label='Violent Crimes', color='#FF6B6B', alpha=0.8)
             ax2.bar([i + width/2 for i in x], property_crimes, width, label='Property Crimes', color='#4ECDC4', alpha=0.8)
-            
+           
             ax2.set_xlabel('Year', color='white')
             ax2.set_ylabel('Number of Crimes', color='white')
             ax2.set_title('Crime Trends Comparison', color='white', fontsize=14, pad=20)
@@ -625,7 +465,7 @@ Please provide a comprehensive, professional response that demonstrates deep cri
             ax2.spines['top'].set_color('white')
             ax2.spines['right'].set_color('white')
             ax2.spines['left'].set_color('white')
-            
+           
             plt.tight_layout()
             return fig
         return None
@@ -634,14 +474,14 @@ Please provide a comprehensive, professional response that demonstrates deep cri
         """Create crime hotspot map of St. Kitts and Nevis using Google Maps tiles"""
         # St. Kitts and Nevis coordinates
         st_kitts_center = [17.3578, -62.7822]
-        
+       
         # Create map with Google Maps style tiles
         m = folium.Map(
-            location=st_kitts_center, 
+            location=st_kitts_center,
             zoom_start=11,
             tiles=None
         )
-        
+       
         # Add Google Maps satellite tiles
         folium.TileLayer(
             tiles='https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',
@@ -650,7 +490,7 @@ Please provide a comprehensive, professional response that demonstrates deep cri
             overlay=False,
             control=True
         ).add_to(m)
-        
+       
         # Add Google Maps terrain tiles
         folium.TileLayer(
             tiles='https://mt1.google.com/vt/lyrs=p&x={x}&y={y}&z={z}',
@@ -659,7 +499,7 @@ Please provide a comprehensive, professional response that demonstrates deep cri
             overlay=False,
             control=True
         ).add_to(m)
-        
+       
         # Add OpenStreetMap as backup
         folium.TileLayer(
             tiles='OpenStreetMap',
@@ -667,7 +507,7 @@ Please provide a comprehensive, professional response that demonstrates deep cri
             overlay=False,
             control=True
         ).add_to(m)
-        
+       
         # Crime hotspots with sample data
         hotspots = [
             {"name": "Basseterre", "coords": [17.2948, -62.7234], "crimes": 450, "type": "High"},
@@ -676,7 +516,7 @@ Please provide a comprehensive, professional response that demonstrates deep cri
             {"name": "Charlestown", "coords": [17.1372, -62.6219], "crimes": 200, "type": "Medium"},
             {"name": "Dieppe Bay", "coords": [17.4075, -62.8097], "crimes": 90, "type": "Low"}
         ]
-        
+       
         # Add markers for each hotspot
         for spot in hotspots:
             color = 'red' if spot['type'] == 'High' else 'orange' if spot['type'] == 'Medium' else 'green'
@@ -689,10 +529,10 @@ Please provide a comprehensive, professional response that demonstrates deep cri
                 fillColor=color,
                 fillOpacity=0.6
             ).add_to(m)
-        
+       
         # Add layer control
         folium.LayerControl().add_to(m)
-        
+       
         return m
 
     def get_emergency_contact_warning(self, service_type):
@@ -709,31 +549,23 @@ Please provide a comprehensive, professional response that demonstrates deep cri
         if any(word in user_input_lower for word in ["emergency", "contact", "number", "help"]):
             return """**EMERGENCY CONTACTS FOR ST. KITTS & NEVIS**
 
-**🚨 IMMEDIATE EMERGENCY: CALL 911**
+Use the sidebar buttons for specific emergency services:
+- **Police** - For crimes in progress and immediate danger
+- **Hospital** - For medical emergencies
+- **Fire Department** - For fires and rescue situations
 
-**Enhanced Emergency Features:**
-- **Direct Calling** - Click the emergency buttons in the sidebar to call immediately
-- **SMS Emergency** - Send pre-formatted emergency messages
-- **Location Sharing** - Share your GPS coordinates with emergency services
-- **Multiple Contact Options** - Primary and direct lines for each service
+**All services can be reached at 911 for immediate emergencies.**
 
-**Available Services:**
-- **🚔 Police** - Royal St. Christopher and Nevis Police Force
-- **🏥 Hospital** - Joseph N. France General Hospital  
-- **🚒 Fire Department** - Fire and Rescue Services
-
-**All emergency services are accessible through the enhanced emergency contact section in the sidebar.**
-
-**In case of immediate danger, call 911 directly using your phone.**"""
-        
+Click the specific service buttons in the sidebar for detailed contact information."""
+       
         # Handle chart/statistics requests
         elif any(word in user_input_lower for word in ["chart", "graph", "statistics", "visual", "plot"]):
             return "Crime Statistics Chart Generated - Check the sidebar for visual data representation."
-        
+       
         # Handle map requests
         elif any(word in user_input_lower for word in ["map", "location", "hotspot", "area", "geographic"]):
             return "Crime Hotspot Map Generated - Interactive map with Google Maps integration showing crime distribution across St. Kitts and Nevis is now available in the sidebar."
-        
+       
         # Use Gemini API for complex criminology queries
         else:
             enhanced_prompt = self.create_criminology_prompt(user_input)
@@ -763,14 +595,14 @@ def show_login_page():
     """Display login/registration page"""
     st.title("SECURO")
     st.markdown("<p class='subtitle'>Criminology Intelligence Assistant for St. Kitts & Nevis</p>", unsafe_allow_html=True)
-    
+   
     tab1, tab2 = st.tabs(["Login", "Create Account"])
-    
+   
     with tab1:
         st.subheader("Login to SECURO")
         username = st.text_input("Username", key="login_username")
         password = st.text_input("Password", type="password", key="login_password")
-        
+       
         if st.button("Login", use_container_width=True):
             if username and password:
                 success, message = st.session_state.auth.login(username, password)
@@ -782,14 +614,14 @@ def show_login_page():
                     st.error(message)
             else:
                 st.error("Please enter both username and password")
-    
+   
     with tab2:
         st.subheader("Create New Account")
         new_username = st.text_input("Choose Username", key="new_username")
         new_password = st.text_input("Choose Password", type="password", key="new_password")
         confirm_password = st.text_input("Confirm Password", type="password", key="confirm_password")
         role = st.selectbox("Role", ["Criminologist", "Law Enforcement", "Researcher", "Student"])
-        
+       
         if st.button("Create Account", use_container_width=True):
             if new_username and new_password and confirm_password:
                 if new_password != confirm_password:
@@ -822,53 +654,21 @@ def display_message(role, content):
 def handle_emergency_contact(service_type):
     """Handle emergency contact with confirmation"""
     chatbot = st.session_state.chatbot
-    
+   
     # Show warning message
     warning_message = chatbot.get_emergency_contact_warning(service_type)
     st.session_state.messages.append({"role": "assistant", "content": warning_message})
     st.session_state.emergency_confirmation = service_type
     st.rerun()
 
-def create_emergency_info_helper():
-    """Create emergency information helper widget"""
-    st.subheader("📝 Emergency Information Helper")
-    
-    with st.expander("Prepare Emergency Information"):
-        location = st.text_input("Your current location:", placeholder="e.g., 123 Main St, Basseterre")
-        emergency_type = st.selectbox("Type of emergency:", 
-            ["Select emergency type...", "Medical Emergency", "Crime in Progress", "Fire", "Traffic Accident", "Natural Disaster", "Other"])
-        details = st.text_area("Brief description:", placeholder="Describe what happened...")
-        
-        if st.button("Generate Emergency Message", use_container_width=True):
-            if location and emergency_type != "Select emergency type...":
-                emergency_info = f"""EMERGENCY REPORT:
-Type: {emergency_type}
-Location: {location}
-Details: {details}
-Time: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-
-Please send immediate assistance."""
-                
-                st.markdown("### 📋 Copy this message to share with emergency services:")
-                st.code(emergency_info)
-                st.success("Emergency information generated! Copy the text above to share with emergency services.")
-                
-                # Add to chat messages
-                st.session_state.messages.append({
-                    "role": "assistant", 
-                    "content": f"Emergency information prepared:\n\n```\n{emergency_info}\n```\n\nThis information is ready to share with emergency services."
-                })
-            else:
-                st.error("Please fill in location and select emergency type")
-
 def main():
     init_session_state()
-    
+   
     # Check if user is logged in
     if not st.session_state.logged_in:
         show_login_page()
         return
-    
+   
     # Header with user info
     col1, col2, col3 = st.columns([1, 2, 1])
     with col1:
@@ -887,25 +687,31 @@ def main():
 
     chatbot = st.session_state.chatbot
 
-    # Enhanced sidebar with emergency features
+    # Simplified sidebar without API key configuration
     with st.sidebar:
-        st.header("SECURO Control Panel")
-        
+        st.header("Criminology Tools")
+       
         # Status indicator
         st.success("🤖 Gemini AI is active")
-        
+       
         st.divider()
-        
-        # Enhanced Emergency Contacts Section
-        chatbot.create_enhanced_emergency_contact_section()
-        
+       
+        # Emergency Contacts Section
+        st.subheader("🚨 Emergency Contacts")
+       
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("Police", use_container_width=True, key="police_btn"):
+                handle_emergency_contact("police")
+        with col2:
+            if st.button("Hospital", use_container_width=True, key="hospital_btn"):
+                handle_emergency_contact("hospital")
+       
+        if st.button("Fire Department", use_container_width=True, key="fire_btn"):
+            handle_emergency_contact("fire")
+       
         st.divider()
-        
-        # Emergency Information Helper
-        create_emergency_info_helper()
-        
-        st.divider()
-        
+       
         # Analysis Tools
         st.subheader("📊 Analysis Tools")
         if st.button("Crime Statistics Chart", use_container_width=True):
@@ -942,42 +748,16 @@ def main():
 • Regression modeling
 • Time series analysis
 
-**Emergency Integration:**
-• Real-time emergency contact system
-• Location-based emergency services
-• Automated emergency reporting
-• GPS coordinate sharing
-
 How can I assist with your specific analytical needs?"""
             st.session_state.messages.append({"role": "assistant", "content": stats_response})
             st.rerun()
 
         st.divider()
-        
+       
         # Utility Functions
         st.subheader("🛠 Utilities")
         if st.button("Clear Chat", use_container_width=True):
             st.session_state.messages = []
-            st.rerun()
-            
-        if st.button("Emergency Test", use_container_width=True):
-            test_message = """🧪 **Emergency System Test**
-
-**Testing Emergency Features:**
-✅ Clickable phone links - Active
-✅ SMS emergency messaging - Active  
-✅ Location sharing - Active
-✅ Emergency information generator - Active
-✅ Multiple contact methods - Active
-
-**Test Results:**
-- All emergency contact methods are functional
-- Phone links will open device dialer
-- SMS links will open messaging app
-- Location sharing requires browser permission
-
-**Note:** This is a test mode. In real emergencies, always call 911 immediately."""
-            st.session_state.messages.append({"role": "assistant", "content": test_message})
             st.rerun()
 
     # Display chat messages
@@ -985,52 +765,30 @@ How can I assist with your specific analytical needs?"""
     with chat_container:
         for message in st.session_state.messages:
             display_message(message["role"], message["content"])
-        
+       
         # Handle emergency confirmation
         if st.session_state.emergency_confirmation:
-            st.markdown("""
-            <div class="emergency-info-box">
-                <h3>🚨 EMERGENCY CONTACT CONFIRMATION</h3>
-                <p>You are about to contact emergency services. Are you sure you want to proceed?</p>
-            </div>
-            """, unsafe_allow_html=True)
-            
             col1, col2 = st.columns(2)
             with col1:
                 if st.button("YES - Proceed with Emergency Contact", type="primary", use_container_width=True):
                     service = st.session_state.emergency_confirmation
                     contact_info = chatbot.emergency_contacts[service]
-                    response = f"""**🚨 EMERGENCY CONTACT ACTIVATED 🚨**
+                    response = f"""**EMERGENCY CONTACT CONFIRMED**
 
 **Contacting:** {contact_info['name']}
-**Primary Number:** {contact_info['emergency']}
-**Direct Line:** {contact_info['direct']}
+**Primary Number:** {contact_info['number']}
+**Direct Line:** {contact_info['alternative']}
 
-**EMERGENCY PROTOCOL:**
-1. **Call {contact_info['emergency']} immediately** for fastest response
-2. **Alternative:** Call {contact_info['direct']} if 911 is busy
-3. **Stay calm** and speak clearly
-4. **Provide your exact location**
-5. **Describe the emergency situation**
-6. **Stay on the line** until help arrives
+**IMPORTANT:** This is a simulation. In a real emergency, you would now call {contact_info['number']} or {contact_info['alternative']}.
 
-**IMPORTANT SAFETY TIPS:**
-• If safe to do so, stay at your location
-• Keep your phone charged and accessible
-• Have identification ready
-• Follow dispatcher instructions
-
-**Your emergency contact request has been logged at:** {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-
-🚨 **THIS IS A REAL EMERGENCY SYSTEM** 🚨
-In an actual emergency, please call the numbers above immediately."""
+Stay safe and provide clear information about your location and situation."""
                     st.session_state.messages.append({"role": "assistant", "content": response})
                     st.session_state.emergency_confirmation = None
                     st.rerun()
-            
+           
             with col2:
                 if st.button("NO - Cancel", use_container_width=True):
-                    st.session_state.messages.append({"role": "assistant", "content": "Emergency contact cancelled. If you need assistance, please use the chat or contact non-emergency services. The enhanced emergency features remain available in the sidebar for immediate access."})
+                    st.session_state.messages.append({"role": "assistant", "content": "Emergency contact cancelled. If you need assistance, please use the chat or contact non-emergency services."})
                     st.session_state.emergency_confirmation = None
                     st.rerun()
 
@@ -1038,15 +796,15 @@ In an actual emergency, please call the numbers above immediately."""
     if prompt := st.chat_input("Ask about crime analysis, research methods, statistics, emergency contacts, or request charts and maps..."):
         # Add user message
         st.session_state.messages.append({"role": "user", "content": prompt})
-        
+       
         # Get bot response
         with st.spinner("🤖 Analyzing your request with Gemini AI..."):
             response = chatbot.process_criminologist_query(prompt)
-        
+       
         # Add bot response
         st.session_state.messages.append({"role": "assistant", "content": response})
         st.rerun()
 
 
 if __name__ == "__main__":
-    main()
+    main(
