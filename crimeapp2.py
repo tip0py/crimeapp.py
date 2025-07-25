@@ -9,7 +9,7 @@ import folium
 from streamlit_folium import folium_static
 
 # Configure OpenAI API
-openai.api_key = st.secrets["OPENAI_API_KEY"]
+openai.api_key = "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"
 
 st.set_page_config(
     page_title="SECURO - Criminology Intelligence Assistant",
