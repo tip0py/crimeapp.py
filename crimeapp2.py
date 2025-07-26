@@ -1,4 +1,8 @@
-import streamlit as st
+# System information
+        st.divider()
+        st.caption(f"**Last Updated:** {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}")
+        st.caption("**Version:** SECURO v2.0")
+        st.caption("**Jurisdiction:** St. Kitts & Nevis")import streamlit as st
 import datetime
 import json
 import requests
@@ -11,13 +15,13 @@ import time
 import os
 
 st.set_page_config(
-    page_title="CrimInsight SKN - Professional Criminology Assistant",
+    page_title="SECURO - Crime Mitigation AI Chat Bot",
     layout="wide",
     initial_sidebar_state="collapsed",
     menu_items=None
 )
 
-# Keep your existing CSS styling
+# Keep your existing CSS styling with login background
 st.markdown("""
 <style>
     /* Black theme with Times New Roman font */
@@ -26,6 +30,35 @@ st.markdown("""
         color: #ffffff !important;
         font-family: 'Times New Roman', Times, serif !important;
         padding-top: 2rem !important;
+    }
+
+    /* Login page specific background */
+    .login-page {
+        background-image: url('data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAfACgDASIAAhEBAxEB/8QAGQAAAwEBAQAAAAAAAAAAAAAABAUGAwIB/8QALBAAAQMDAwMEAQQDAAAAAAAAAQIDEQAEBSExEkFhBhMicYGRoTKx0fAjQsH/xAAYAQADAQEAAAAAAAAAAAAAAAACAwQBBf/EAB4RAAIDAQACAwAAAAAAAAAAAAABAgMREiExE0FR/9oADAMBAAIRAxEAPwCmxeKt7VCG2kBCEiABsK1VQeyMslplCVd6/aVoBb0uoACkkEJSEA+4NdeKbm2s8qpt12kOJbSAr9JeKtT5gCmsagtCj9isqy6ky99bKU6lUhKdVEmJ8A7V1jfYlbSUiGgYgVhLPG4yMoTcpcbeXAPzEyKjEzf5+3YSnwtTwPyJVxo+lGzjIzF31PuIQlWqfaSr8EpOkgfGRnYuGTkmXJDrbTqVEKyOjF1K0goBIAGWXL1LCzQW+q4wvEcVhJ7q/EGdUq5Jqwx/t5SzQ8ggKOqTP9Kqf9k=') !important;
+        background-size: cover !important;
+        background-position: center !important;
+        background-repeat: no-repeat !important;
+        background-attachment: fixed !important;
+        min-height: 100vh !important;
+        position: relative !important;
+    }
+
+    /* Dark overlay for login page */
+    .login-page::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7) !important;
+        z-index: 1 !important;
+    }
+
+    /* Ensure login content appears above overlay */
+    .login-content {
+        position: relative !important;
+        z-index: 2 !important;
     }
    
     /* Sidebar styling */
@@ -59,16 +92,18 @@ st.markdown("""
     h1 {
         color: #ffffff !important;
         font-weight: 600 !important;
-        font-size: 2rem !important;
+        font-size: 2.5rem !important;
         text-align: center !important;
         margin-bottom: 0.5rem !important;
         font-family: 'Times New Roman', Times, serif !important;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8) !important;
     }
    
     h2, h3 {
         color: #ffffff !important;
         font-weight: 500 !important;
         font-family: 'Times New Roman', Times, serif !important;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8) !important;
     }
    
     /* Fix chat message containers */
@@ -192,9 +227,12 @@ st.markdown("""
     /* Center subtitle */
     .subtitle {
         text-align: center;
-        color: #888888 !important;
+        color: #FFFF00 !important;
         margin-bottom: 2rem;
         font-family: 'Times New Roman', Times, serif !important;
+        font-weight: bold !important;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8) !important;
+        font-size: 1.2rem !important;
     }
    
     /* Hide default streamlit elements */
@@ -209,14 +247,41 @@ st.markdown("""
         padding-right: 1rem !important;
     }
 
-    /* Login form styling */
+    /* Enhanced login form styling */
     .login-container {
-        background-color: #1a1a1a !important;
-        padding: 2rem !important;
-        border-radius: 10px !important;
-        border: 1px solid #333333 !important;
-        max-width: 400px !important;
+        background-color: rgba(26, 26, 26, 0.95) !important;
+        padding: 2.5rem !important;
+        border-radius: 15px !important;
+        border: 2px solid #FFFF00 !important;
+        max-width: 450px !important;
         margin: 2rem auto !important;
+        box-shadow: 0 8px 32px rgba(255, 255, 0, 0.3) !important;
+        backdrop-filter: blur(10px) !important;
+    }
+
+    /* SECURO branding */
+    .securo-title {
+        color: #FFFF00 !important;
+        font-size: 3rem !important;
+        font-weight: bold !important;
+        text-align: center !important;
+        text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.9) !important;
+        margin-bottom: 0.5rem !important;
+        letter-spacing: 3px !important;
+    }
+
+    /* Crime scene tape effect */
+    .crime-tape {
+        background: repeating-linear-gradient(
+            45deg,
+            #FFFF00,
+            #FFFF00 10px,
+            #000000 10px,
+            #000000 20px
+        ) !important;
+        height: 8px !important;
+        margin: 1rem 0 !important;
+        border: 2px solid #000000 !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -230,6 +295,7 @@ class UserAuthentication:
         return hashlib.sha256(password.encode()).hexdigest()
    
     def create_account(self, username, password, role, badge_number="", department=""):
+        """Create new professional user account"""
         if username in st.session_state.users_db:
             return False, "Username already exists"
        
@@ -239,8 +305,8 @@ class UserAuthentication:
         st.session_state.users_db[username] = {
             "password": self.hash_password(password),
             "role": role,
-            "badge_number": badge_number,
-            "department": department,
+            "badge_number": badge_number if badge_number else "",
+            "department": department if department else "",
             "created": datetime.datetime.now().isoformat(),
             "access_level": self.get_access_level(role)
         }
@@ -983,39 +1049,55 @@ def init_session_state():
         st.session_state.auth = UserAuthentication()
 
 def show_professional_login():
-    """Display professional login/registration page"""
-    st.title("CrimInsight SKN")
-    st.markdown("<p class='subtitle'>Professional Criminology Assistant for St. Kitts & Nevis Law Enforcement</p>", unsafe_allow_html=True)
+    """Display professional login/registration page with crime scene background"""
     
-    # Security notice
-    st.info("🔒 **Professional Access Only** - This system is restricted to authorized law enforcement personnel, criminologists, and criminal justice professionals.")
+    # Add login page class to body
+    st.markdown('<div class="login-page">', unsafe_allow_html=True)
+    st.markdown('<div class="login-content">', unsafe_allow_html=True)
     
-    tab1, tab2 = st.tabs(["Professional Login", "Register Professional Account"])
+    # SECURO Title with crime tape
+    st.markdown('<h1 class="securo-title">SECURO</h1>', unsafe_allow_html=True)
+    st.markdown('<div class="crime-tape"></div>', unsafe_allow_html=True)
+    st.markdown("<p class='subtitle'>CRIME MITIGATION AI CHAT BOT<br>Professional Access for St. Kitts & Nevis Law Enforcement</p>", unsafe_allow_html=True)
+    
+    # Security notice with enhanced styling
+    st.markdown("""
+    <div style="background: rgba(139, 0, 0, 0.8); padding: 15px; border-radius: 10px; border: 2px solid #FF0000; margin: 20px 0; text-align: center;">
+        <h3 style="color: #FFFF00; margin: 0;">🔒 RESTRICTED ACCESS SYSTEM 🔒</h3>
+        <p style="color: #ffffff; margin: 5px 0;">Authorized Personnel Only - Law Enforcement & Criminal Justice Professionals</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Login container
+    st.markdown('<div class="login-container">', unsafe_allow_html=True)
+    
+    tab1, tab2 = st.tabs(["🔐 Professional Login", "📝 Register Professional Account"])
     
     with tab1:
-        st.subheader("Access Professional System")
-        username = st.text_input("Professional Username", key="login_username")
-        password = st.text_input("Password", type="password", key="login_password")
+        st.subheader("Access SECURO System")
+        username = st.text_input("Professional Username", key="login_username", placeholder="Enter your professional username")
+        password = st.text_input("Secure Password", type="password", key="login_password", placeholder="Enter your secure password")
         
-        if st.button("Access System", use_container_width=True, type="primary"):
+        if st.button("🚪 ACCESS SECURO SYSTEM", use_container_width=True, type="primary"):
             if username and password:
                 success, message = st.session_state.auth.login(username, password)
                 if success:
-                    st.success(message)
+                    st.success(f"✅ {message}")
+                    st.balloons()
                     time.sleep(1)
                     st.rerun()
                 else:
-                    st.error(message)
+                    st.error(f"❌ {message}")
             else:
-                st.error("Please enter your professional credentials")
+                st.error("⚠️ Please enter your professional credentials")
     
     with tab2:
         st.subheader("Register Professional Account")
         st.warning("⚠️ Professional verification required for account activation")
         
-        new_username = st.text_input("Professional Username", key="new_username")
-        new_password = st.text_input("Secure Password (8+ characters)", type="password", key="new_password")
-        confirm_password = st.text_input("Confirm Password", type="password", key="confirm_password")
+        new_username = st.text_input("Professional Username", key="new_username", placeholder="Choose a professional username")
+        new_password = st.text_input("Secure Password (8+ characters)", type="password", key="new_password", placeholder="Create a strong password")
+        confirm_password = st.text_input("Confirm Password", type="password", key="confirm_password", placeholder="Confirm your password")
         
         role = st.selectbox("Professional Role", [
             "Senior Criminologist",
@@ -1027,24 +1109,29 @@ def show_professional_login():
             "Student"
         ])
         
-        badge_number = st.text_input("Badge/ID Number (if applicable)")
-        department = st.text_input("Department/Agency")
+        badge_number = st.text_input("Badge/ID Number (if applicable)", placeholder="Enter badge or ID number")
+        department = st.text_input("Department/Agency", placeholder="Enter your department or agency")
         
-        if st.button("Submit Professional Registration", use_container_width=True):
+        if st.button("🔒 SUBMIT PROFESSIONAL REGISTRATION", use_container_width=True):
             if new_username and new_password and confirm_password:
                 if new_password != confirm_password:
-                    st.error("Passwords do not match")
+                    st.error("❌ Passwords do not match")
                 else:
                     success, message = st.session_state.auth.create_account(
                         new_username, new_password, role, badge_number, department
                     )
                     if success:
-                        st.success(message)
-                        st.info("Your professional account has been created. You may now login.")
+                        st.success(f"✅ {message}")
+                        st.info("🎉 Your professional account has been created. You may now login to SECURO.")
+                        st.balloons()
                     else:
-                        st.error(message)
+                        st.error(f"❌ {message}")
             else:
-                st.error("Please complete all required fields")
+                st.error("⚠️ Please complete all required fields")
+    
+    st.markdown('</div>', unsafe_allow_html=True)  # Close login-container
+    st.markdown('</div>', unsafe_allow_html=True)  # Close login-content
+    st.markdown('</div>', unsafe_allow_html=True)  # Close login-page
 
 def display_message(role, content):
     """Display messages with proper styling"""
@@ -1079,8 +1166,8 @@ def main():
         st.write(f"**Access Level:** {st.session_state.access_level}/5")
     
     with col2:
-        st.title("CrimInsight SKN")
-        st.markdown("<p class='subtitle'>Professional Criminology Intelligence System</p>", unsafe_allow_html=True)
+        st.markdown('<h1 class="securo-title">SECURO</h1>', unsafe_allow_html=True)
+        st.markdown("<p class='subtitle'>CRIME MITIGATION AI CHAT BOT<br>Professional Intelligence System</p>", unsafe_allow_html=True)
     
     with col3:
         if st.button("Secure Logout", type="secondary"):
@@ -1207,9 +1294,9 @@ def main():
     with chat_container:
         # Welcome message for new sessions
         if not st.session_state.messages:
-            welcome_msg = f"""**Welcome to CrimInsight SKN Professional System**
+            welcome_msg = f"""**Welcome to SECURO Professional System**
 
-**Officer {st.session_state.current_user}** - You are now connected to the specialized criminology intelligence assistant for St. Kitts and Nevis law enforcement.
+**Officer {st.session_state.current_user}** - You are now connected to the SECURO Crime Mitigation AI Chat Bot for St. Kitts and Nevis law enforcement.
 
 **Available Services:**
 - 📋 Case documentation and analysis
@@ -1221,7 +1308,7 @@ def main():
 
 **Security Notice:** This system maintains professional standards and confidentiality. All interactions are logged for quality assurance and security purposes.
 
-**How may I assist with your professional duties today?**
+**How may SECURO assist with your professional duties today?**
             """
             st.session_state.messages.append({"role": "assistant", "content": welcome_msg})
         
