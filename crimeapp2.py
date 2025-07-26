@@ -1323,6 +1323,7 @@ def main():
         # Add bot response
         st.session_state.messages.append({"role": "assistant", "content": response})
         st.rerun()
-
+        st.cache_data.clear()
+        st.cache_resource.clear()
 if __name__ == "__main__":
     main()
