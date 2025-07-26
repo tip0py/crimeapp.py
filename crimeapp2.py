@@ -17,7 +17,7 @@ st.set_page_config(
     menu_items=None
 )
 
-# Keep your existing CSS styling with login background
+# Updated CSS with your crime scene background and fixes
 st.markdown("""
 <style>
     /* Black theme with Times New Roman font */
@@ -28,7 +28,7 @@ st.markdown("""
         padding-top: 2rem !important;
     }
 
-    /* Login page specific background */
+    /* Login page with your crime scene background */
     .login-page {
         background-image: url('data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAfACgDASIAAhEBAxEB/8QAGQAAAwEBAQAAAAAAAAAAAAAABAUGAwIB/8QALBAAAQMDAwMEAQQDAAAAAAAAAQIDEQAEBSExEkFhBhMicYGRoTKx0fAjQsH/xAAYAQADAQEAAAAAAAAAAAAAAAACAwQBBf/EAB4RAAIDAQACAwAAAAAAAAAAAAABAgMREiExE0FR/9oADAMBAAIRAxEAPwCmxeKt7VCG2kBCEiABsK1VQeyMslplCVd6/aVoBb0uoACkkEJSEA+4NdeKbm2s8qpt12kOJbSAr9JeKtT5gCmsagtCj9isqy6ky99bKU6lUhKdVEmJ8A7V1jfYlbSUiGgYgVhLPG4yMoTcpcbeXAPzEyKjEzf5+3YSnwtTwPyJVxo+lGzjIzF31PuIQlWqfaSr8EpOkgfGRnYuGTkmXJDrbTqVEKyOjF1K0goBIAGWXL1LCzQW+q4wvEcVhJ7q/EGdUq5Jqwx/t5SzQ8ggKOqTP9Kqf9k=') !important;
         background-size: cover !important;
@@ -278,6 +278,36 @@ st.markdown("""
         height: 8px !important;
         margin: 1rem 0 !important;
         border: 2px solid #000000 !important;
+    }
+
+    /* Crime map container */
+    .crime-map-container {
+        background-color: #1a1a1a !important;
+        border: 2px solid #333333 !important;
+        border-radius: 10px !important;
+        padding: 20px !important;
+        margin: 20px 0 !important;
+    }
+
+    /* Crime effect animation */
+    @keyframes crime-alert {
+        0% { 
+            background-color: #8B0000;
+            transform: scale(1);
+        }
+        50% { 
+            background-color: #FF0000;
+            transform: scale(1.05);
+        }
+        100% { 
+            background-color: #8B0000;
+            transform: scale(1);
+        }
+    }
+
+    .crime-celebration {
+        animation: crime-alert 0.5s ease-in-out 3;
+        border: 2px solid #FF0000 !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -545,28 +575,38 @@ class CriminologyProfessionalBot:
             """
         }
 
-        # Statistical data (enhanced with more realistic data)
+        # Statistical data for different years
         self.crime_statistics = {
             "2024": {
                 "total_reported": 1847,
                 "by_category": {
-                    "violent_crimes": {"count": 267, "clearance_rate": 78.3, "trend": "down 12%"},
-                    "property_crimes": {"count": 891, "clearance_rate": 65.2, "trend": "down 8%"},
-                    "drug_offenses": {"count": 423, "clearance_rate": 85.1, "trend": "up 15%"},
-                    "white_collar": {"count": 89, "clearance_rate": 72.0, "trend": "up 23%"},
-                    "cybercrimes": {"count": 177, "clearance_rate": 45.8, "trend": "up 67%"}
-                },
-                "by_location": {
-                    "Basseterre": {"incidents": 734, "per_capita": 45.2},
-                    "Charlestown": {"incidents": 289, "per_capita": 38.7},
-                    "Sandy Point": {"incidents": 156, "per_capita": 42.1},
-                    "Old Road": {"incidents": 134, "per_capita": 39.8},
-                    "Cayon": {"incidents": 98, "per_capita": 35.2}
-                },
-                "temporal_patterns": {
-                    "peak_hours": ["22:00-02:00", "14:00-18:00"],
-                    "peak_days": ["Friday", "Saturday", "Sunday"],
-                    "seasonal_trends": "Higher incidents during tourist season"
+                    "Violent Crimes": 267,
+                    "Property Crimes": 891,
+                    "Drug Offenses": 423,
+                    "White Collar": 89,
+                    "Cybercrimes": 177
+                }
+            },
+            "2023": {
+                "total_reported": 1956,
+                "by_category": {
+                    "Violent Crimes": 302,
+                    "Property Crimes": 967,
+                    "Drug Offenses": 368,
+                    "White Collar": 72,
+                    "Cybercrimes": 106,
+                    "Traffic Violations": 141
+                }
+            },
+            "2022": {
+                "total_reported": 2134,
+                "by_category": {
+                    "Violent Crimes": 334,
+                    "Property Crimes": 1045,
+                    "Drug Offenses": 401,
+                    "White Collar": 58,
+                    "Cybercrimes": 63,
+                    "Traffic Violations": 233
                 }
             }
         }
@@ -699,14 +739,69 @@ For specific legal interpretations, consult with the Director of Public Prosecut
         
         return legal_response
 
+    def create_crime_statistics_chart(self, year):
+        """Create crime statistics chart for a specific year"""
+        if year not in self.crime_statistics:
+            return None, f"Crime statistics for {year} are not available. Available years: {', '.join(self.crime_statistics.keys())}"
+        
+        data = self.crime_statistics[year]
+        
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 8))
+        fig.patch.set_facecolor('black')
+        
+        # Pie chart
+        categories = list(data["by_category"].keys())
+        values = list(data["by_category"].values())
+        colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FECA57', '#FF9FF3'][:len(categories)]
+        
+        ax1.pie(values, labels=categories, autopct='%1.1f%%', colors=colors, startangle=90,
+               textprops={'color': 'white', 'fontsize': 11})
+        ax1.set_title(f'Crime Distribution {year}', color='white', fontsize=16, pad=20)
+        ax1.set_facecolor('black')
+        
+        # Bar chart
+        bars = ax2.bar(categories, values, color=colors, alpha=0.8)
+        ax2.set_title(f'Crime Statistics {year}', color='white', fontsize=16, pad=20)
+        ax2.set_ylabel('Number of Cases', color='white')
+        ax2.set_facecolor('black')
+        ax2.tick_params(colors='white', rotation=45)
+        
+        # Add value labels on bars
+        for bar in bars:
+            height = bar.get_height()
+            ax2.text(bar.get_x() + bar.get_width()/2., height + 5,
+                    f'{int(height)}', ha='center', va='bottom', color='white', fontweight='bold')
+        
+        for spine in ax2.spines.values():
+            spine.set_color('white')
+        
+        plt.xticks(rotation=45, ha='right')
+        plt.tight_layout()
+        
+        return fig, f"**CRIME STATISTICS FOR {year}**\n\nTotal Reported Crimes: {data['total_reported']}\nChart generated showing distribution and breakdown by category."
+
     def process_professional_query(self, user_input):
         """Process queries with professional criminology focus"""
         user_input_lower = user_input.lower()
         user_role = st.session_state.get('user_role', 'Professional')
         access_level = st.session_state.get('access_level', 1)
 
+        # Handle statistics requests with year detection
+        if any(word in user_input_lower for word in ["statistics", "data", "trends", "numbers", "crimes"]):
+            # Look for year in the query
+            import re
+            year_match = re.search(r'\b(20\d{2})\b', user_input)
+            if year_match:
+                year = year_match.group(1)
+                fig, response = self.create_crime_statistics_chart(year)
+                if fig:
+                    st.pyplot(fig)
+                return response
+            else:
+                return "Please specify a year for crime statistics (e.g., 'Show me crime statistics for 2024'). Available years: 2022, 2023, 2024"
+
         # Handle specific professional requests
-        if any(word in user_input_lower for word in ["template", "report", "form", "document"]):
+        elif any(word in user_input_lower for word in ["template", "report", "form", "document"]):
             if "incident" in user_input_lower:
                 return f"**INCIDENT REPORT TEMPLATE GENERATED**\n\n{self.get_case_template('incident_report')}"
             elif "analysis" in user_input_lower or "case" in user_input_lower:
@@ -720,9 +815,6 @@ For specific legal interpretations, consult with the Director of Public Prosecut
         
         elif any(word in user_input_lower for word in ["protocol", "procedure", "how to", "steps"]):
             return self.get_investigation_protocol(user_input)
-        
-        elif any(word in user_input_lower for word in ["statistics", "data", "trends", "numbers"]):
-            return self.get_crime_statistics_summary()
         
         # Use Gemini AI for complex queries
         else:
@@ -853,92 +945,6 @@ For specific legal interpretations, consult with the Director of Public Prosecut
 **For specific protocols, consult the Police Operations Manual or contact your supervisor.**
             """
 
-    def get_crime_statistics_summary(self):
-        """Return current crime statistics"""
-        return """**CRIME STATISTICS SUMMARY - ST. KITTS & NEVIS (2024)**
-
-**OVERALL STATISTICS**
-- **Total Reported Crimes:** 1,847
-- **Overall Clearance Rate:** 69.3%
-- **Year-over-Year Change:** -6.8% (decrease)
-
-**BY CATEGORY**
-- **Violent Crimes:** 267 cases (78.3% clearance) down 12%
-- **Property Crimes:** 891 cases (65.2% clearance) down 8%
-- **Drug Offenses:** 423 cases (85.1% clearance) up 15%
-- **White Collar:** 89 cases (72.0% clearance) up 23%
-- **Cybercrimes:** 177 cases (45.8% clearance) up 67%
-
-**BY LOCATION (Incidents per 1,000 residents)**
-- **Basseterre:** 734 incidents (45.2 per capita)
-- **Charlestown:** 289 incidents (38.7 per capita)
-- **Sandy Point:** 156 incidents (42.1 per capita)
-
-**TEMPORAL PATTERNS**
-- **Peak Hours:** 22:00-02:00, 14:00-18:00
-- **Peak Days:** Friday, Saturday, Sunday
-- **Seasonal:** Higher during tourist season (Dec-Apr)
-
-**KEY TRENDS**
-- Cybercrime incidents increasing rapidly (+67%)
-- Traditional violent crime decreasing (-12%)
-- Drug enforcement showing strong results (85% clearance)
-- Need for enhanced digital forensics capabilities
-
-*Data updated monthly. For detailed analysis, contact Statistics Unit.*
-        """
-
-    def create_enhanced_crime_chart(self):
-        """Create professional crime statistics visualization"""
-        fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(16, 12))
-        fig.patch.set_facecolor('black')
-        
-        # Crime categories pie chart
-        categories = ['Violent', 'Property', 'Drug', 'White Collar', 'Cyber']
-        values = [267, 891, 423, 89, 177]
-        colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FECA57']
-        
-        ax1.pie(values, labels=categories, autopct='%1.1f%%', colors=colors, startangle=90,
-               textprops={'color': 'white', 'fontsize': 11})
-        ax1.set_title('Crime Distribution 2024', color='white', fontsize=14, pad=20)
-        ax1.set_facecolor('black')
-        
-        # Clearance rates bar chart
-        clearance_rates = [78.3, 65.2, 85.1, 72.0, 45.8]
-        bars = ax2.bar(categories, clearance_rates, color=colors, alpha=0.8)
-        ax2.set_title('Clearance Rates by Category (%)', color='white', fontsize=14, pad=20)
-        ax2.set_ylabel('Clearance Rate (%)', color='white')
-        ax2.set_facecolor('black')
-        ax2.tick_params(colors='white')
-        for spine in ax2.spines.values():
-            spine.set_color('white')
-        
-        # Location-based incidents
-        locations = ['Basseterre', 'Charlestown', 'Sandy Point', 'Old Road', 'Cayon']
-        incidents = [734, 289, 156, 134, 98]
-        ax3.barh(locations, incidents, color='#4ECDC4', alpha=0.8)
-        ax3.set_title('Incidents by Location', color='white', fontsize=14, pad=20)
-        ax3.set_xlabel('Number of Incidents', color='white')
-        ax3.set_facecolor('black')
-        ax3.tick_params(colors='white')
-        for spine in ax3.spines.values():
-            spine.set_color('white')
-        
-        # Monthly trend line
-        months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-        trend_data = [145, 138, 162, 178, 155, 149, 167, 153, 142, 158, 163, 175]
-        ax4.plot(months, trend_data, color='#FECA57', linewidth=3, marker='o', markersize=6)
-        ax4.set_title('Monthly Crime Trends 2024', color='white', fontsize=14, pad=20)
-        ax4.set_ylabel('Total Incidents', color='white')
-        ax4.set_facecolor('black')
-        ax4.tick_params(colors='white')
-        ax4.grid(True, alpha=0.3, color='white')
-        for spine in ax4.spines.values():
-            spine.set_color('white')
-        
-        plt.tight_layout()
-        return fig
-
     def create_professional_crime_map(self):
         """Create detailed crime mapping for law enforcement"""
         # St. Kitts and Nevis coordinates
@@ -1027,6 +1033,20 @@ For specific legal interpretations, consult with the Director of Public Prosecut
         return m
 
 
+def crime_celebration_effect():
+    """Create crime-themed celebration effect instead of balloons"""
+    st.markdown("""
+    <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999;">
+        <div style="position: absolute; top: 20%; left: 10%; animation: crime-alert 2s ease-in-out;">🚨</div>
+        <div style="position: absolute; top: 30%; right: 15%; animation: crime-alert 2.5s ease-in-out;">⚖️</div>
+        <div style="position: absolute; top: 50%; left: 20%; animation: crime-alert 3s ease-in-out;">🔍</div>
+        <div style="position: absolute; top: 40%; right: 25%; animation: crime-alert 2.2s ease-in-out;">👮</div>
+        <div style="position: absolute; top: 60%; left: 50%; animation: crime-alert 2.8s ease-in-out;">📋</div>
+        <div style="position: absolute; top: 25%; left: 60%; animation: crime-alert 2.3s ease-in-out;">🔐</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+
 def init_session_state():
     """Initialize session state variables"""
     if "messages" not in st.session_state:
@@ -1079,8 +1099,8 @@ def show_professional_login():
                 success, message = st.session_state.auth.login(username, password)
                 if success:
                     st.success(f"Access Granted: {message}")
-                    st.balloons()
-                    time.sleep(1)
+                    crime_celebration_effect()
+                    time.sleep(2)
                     st.rerun()
                 else:
                     st.error(f"Access Denied: {message}")
@@ -1119,7 +1139,7 @@ def show_professional_login():
                     if success:
                         st.success(f"Registration Successful: {message}")
                         st.info("Your professional account has been created. You may now login to SECURO.")
-                        st.balloons()
+                        crime_celebration_effect()
                     else:
                         st.error(f"Registration Failed: {message}")
             else:
@@ -1176,7 +1196,16 @@ def main():
 
     bot = st.session_state.professional_bot
 
-    # Enhanced professional sidebar
+    # Display Crime Hotspot Map for Public Access (moved from sidebar)
+    st.markdown('<div class="crime-map-container">', unsafe_allow_html=True)
+    st.subheader("🗺️ St. Kitts & Nevis Crime Hotspot Map")
+    st.markdown("*Interactive crime intelligence map showing current hotspots and police stations*")
+    
+    crime_map = bot.create_professional_crime_map()
+    folium_static(crime_map, width=800, height=400)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # Enhanced professional sidebar (removed Crime Statistics Dashboard)
     with st.sidebar:
         st.header("Professional Tools")
         
@@ -1186,11 +1215,11 @@ def main():
         
         st.divider()
         
-        # Emergency protocols
+        # Emergency protocols - FIXED with proper button text
         st.subheader("Emergency Protocols")
         col1, col2 = st.columns(2)
         with col1:
-            if st.button("Police Dispatch", use_container_width=True, help="911 Emergency"):
+            if st.button("🚨 Police Dispatch", use_container_width=True, help="911 Emergency"):
                 st.session_state.messages.append({
                     "role": "assistant", 
                     "content": "**EMERGENCY DISPATCH PROTOCOL**\n\n**Immediate:** Call 911\n**Direct Line:** (869) 465-2241\n\n**For Officer Safety:**\n- Request backup if needed\n- Provide location and situation\n- Follow tactical protocols\n\n*This is a training simulation - use actual emergency numbers in real situations.*"
@@ -1198,7 +1227,7 @@ def main():
                 st.rerun()
         
         with col2:
-            if st.button("Medical Emergency", use_container_width=True, help="Medical Response"):
+            if st.button("🏥 Medical Emergency", use_container_width=True, help="Medical Response"):
                 st.session_state.messages.append({
                     "role": "assistant",
                     "content": "**MEDICAL EMERGENCY PROTOCOL**\n\n**Hospital Emergency:** (869) 465-2551\n**Ambulance:** 911\n\n**For Officer-Involved Incidents:**\n- Secure scene first\n- Request EMS immediately\n- Document all actions\n- Notify supervisor\n\n*Follow department medical emergency procedures.*"
@@ -1210,7 +1239,7 @@ def main():
         # Professional resources
         st.subheader("Case Management")
         
-        if st.button("Incident Report Template", use_container_width=True):
+        if st.button("📋 Incident Report Template", use_container_width=True):
             template = bot.get_case_template('incident_report')
             st.session_state.messages.append({
                 "role": "assistant",
@@ -1218,7 +1247,7 @@ def main():
             })
             st.rerun()
         
-        if st.button("Case Analysis Framework", use_container_width=True):
+        if st.button("🔍 Case Analysis Framework", use_container_width=True):
             template = bot.get_case_template('case_analysis')
             st.session_state.messages.append({
                 "role": "assistant",
@@ -1226,7 +1255,7 @@ def main():
             })
             st.rerun()
         
-        if st.button("Legal Reference Guide", use_container_width=True):
+        if st.button("⚖️ Legal Reference Guide", use_container_width=True):
             legal_ref = bot.get_legal_reference("general")
             st.session_state.messages.append({
                 "role": "assistant",
@@ -1236,29 +1265,10 @@ def main():
         
         st.divider()
         
-        # Analytics and intelligence
-        st.subheader("Intelligence Analysis")
+        # Professional directory
+        st.subheader("Directory & Contacts")
         
-        if st.button("Crime Statistics Dashboard", use_container_width=True):
-            fig = bot.create_enhanced_crime_chart()
-            st.pyplot(fig)
-            stats = bot.get_crime_statistics_summary()
-            st.session_state.messages.append({
-                "role": "assistant",
-                "content": f"**CRIME STATISTICS DASHBOARD ACTIVATED**\n\n{stats}"
-            })
-            st.rerun()
-        
-        if st.button("Tactical Crime Map", use_container_width=True):
-            crime_map = bot.create_professional_crime_map()
-            folium_static(crime_map, width=300, height=400)
-            st.session_state.messages.append({
-                "role": "assistant",
-                "content": "**TACTICAL CRIME MAPPING SYSTEM**\n\nInteractive crime intelligence map deployed with:\n- Real-time hotspot analysis\n- Police station locations\n- Risk assessment overlays\n- Satellite and street view options\n\nUse for tactical planning and resource deployment."
-            })
-            st.rerun()
-        
-        if st.button("Professional Directory", use_container_width=True):
+        if st.button("📞 Professional Directory", use_container_width=True):
             directory = bot.get_professional_directory()
             st.session_state.messages.append({
                 "role": "assistant",
@@ -1271,7 +1281,7 @@ def main():
         # System utilities
         st.subheader("System Utilities")
         
-        if st.button("Clear Case File", use_container_width=True):
+        if st.button("🗑️ Clear Case File", use_container_width=True):
             st.session_state.messages = []
             st.session_state.messages.append({
                 "role": "assistant",
@@ -1298,9 +1308,9 @@ def main():
 - Case documentation and analysis
 - Legal reference and statute lookup
 - Investigation protocols and procedures
-- Crime statistics and intelligence analysis
+- Crime statistics and intelligence analysis (ask for specific years: 2022, 2023, 2024)
 - Professional contact directory
-- Tactical crime mapping
+- Tactical crime mapping (displayed above)
 
 **Security Notice:** This system maintains professional standards and confidentiality. All interactions are logged for quality assurance and security purposes.
 
@@ -1323,7 +1333,6 @@ def main():
         # Add bot response
         st.session_state.messages.append({"role": "assistant", "content": response})
         st.rerun()
-        st.cache_data.clear()
-        st.cache_resource.clear()
+
 if __name__ == "__main__":
     main()
