@@ -1,8 +1,10 @@
 # System information
-        st.divider()
-        st.caption(f"**Last Updated:** {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}")
-        st.caption("**Version:** SECURO v2.0")
-        st.caption("**Jurisdiction:** St. Kitts & Nevis")import streamlit as st
+st.divider()
+st.caption(f"**Last Updated:** {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}")
+st.caption("**Version:** SECURO v2.0")
+st.caption("**Jurisdiction:** St. Kitts & Nevis")
+
+import streamlit as st
 import datetime
 import json
 import requests
