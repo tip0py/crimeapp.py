@@ -17,7 +17,7 @@ st.set_page_config(
     menu_items=None
 )
 
-# Updated CSS with your crime scene background and fixes
+# Updated CSS with enhanced magnifying glass animation
 st.markdown("""
 <style>
     /* Black theme with Times New Roman font */
@@ -30,7 +30,7 @@ st.markdown("""
 
     /* Login page with your crime scene background */
     .login-page {
-        background-image: url('data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAfACgDASIAAhEBAxEB/8QAGQAAAwEBAQAAAAAAAAAAAAAABAUGAwIB/8QALBAAAQMDAwMEAQQDAAAAAAAAAQIDEQAEBSExEkFhBhMicYGRoTKx0fAjQsH/xAAYAQADAQEAAAAAAAAAAAAAAAACAwQBBf/EAB4RAAIDAQACAwAAAAAAAAAAAAABAgMREiExE0FR/9oADAMBAAIRAxEAPwCmxeKt7VCG2kBCEiABsK1VQeyMslplCVd6/aVoBb0uoACkkEJSEA+4NdeKbm2s8qpt12kOJbSAr9JeKtT5gCmsagtCj9isqy6ky99bKU6lUhKdVEmJ8A7V1jfYlbSUiGgYgVhLPG4yMoTcpcbeXAPzEyKjEzf5+3YSnwtTwPyJVxo+lGzjIzF31PuIQlWqfaSr8EpOkgfGRnYuGTkmXJDrbTqVEKyOjF1K0goBIAGWXL1LCzQW+q4wvEcVhJ7q/EGdUq5Jqwx/t5SzQ8ggKOqTP9Kqf9k=') !important;
+        background-image: url('data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAfACgDASIAAhEBAxEB/8QAGQAAAwEBAQAAAAAAAAAAAAAABAUGAwIB/8QALBAAAQMDAwMEAQQDAAAAAAAAAQIDEQAEBSExEkFhBhMicYGRoTKx0fAjQsH/xAAYAQADAQEAAAAAAAAAAAAAAAACAwQBBf/EAB4RAAIDAQACAwAAAAAAAAAAAAABAgMREiExE0FR/9oADAMBAAIRAxEAPwCmxeKt7VCG2kBKEiABsK1VQeyMslplCVd6/aVoBb0uoACkkEJSEA+4NdeKbm2s8qpt12kOJbSAr9JeKtT5gCmsagtCj9isqy6ky99bKU6lUhKdVEmJ8A7V1jfYlbSUiGgYgVhLPG4yMoTcpcbeXAPyEyKjEzf5+3YSnwtTwPyJVxo+lGzjIzF31PuIQlWqfaSr8EpOkgfGRnYuGTkmXJDrbTqVEKyOjF1K0goBIAGWXL1LCzQW+q4wvEcVhJ7q/EGdUq5Jqwx/t5SzQ8ggKOqTP9Kqf9k=') !important;
         background-size: cover !important;
         background-position: center !important;
         background-repeat: no-repeat !important;
@@ -289,26 +289,53 @@ st.markdown("""
         margin: 20px 0 !important;
     }
 
-    /* Crime effect animation */
-    @keyframes crime-alert {
+    /* Enhanced magnifying glass celebration animation */
+    @keyframes magnifySearch {
         0% { 
-            background-color: #8B0000;
-            transform: scale(1);
+            transform: translateY(100vh) scale(0.5) rotate(0deg);
+            opacity: 0;
+        }
+        20% {
+            opacity: 1;
         }
         50% { 
-            background-color: #FF0000;
-            transform: scale(1.05);
+            transform: translateY(30vh) scale(1.2) rotate(180deg);
+            opacity: 1;
+        }
+        80% {
+            transform: translateY(-10vh) scale(0.8) rotate(360deg);
+            opacity: 0.8;
         }
         100% { 
-            background-color: #8B0000;
-            transform: scale(1);
+            transform: translateY(-20vh) scale(0.3) rotate(540deg);
+            opacity: 0;
         }
     }
 
-    .crime-celebration {
-        animation: crime-alert 0.5s ease-in-out 3;
-        border: 2px solid #FF0000 !important;
+    .magnify-celebration {
+        position: fixed;
+        font-size: 2rem;
+        z-index: 9999;
+        pointer-events: none;
+        animation: magnifySearch 4s ease-out forwards;
     }
+
+    /* Vary the animation timing for different magnifying glasses */
+    .magnify-1 { animation-delay: 0s; left: 10%; }
+    .magnify-2 { animation-delay: 0.3s; left: 20%; }
+    .magnify-3 { animation-delay: 0.6s; left: 30%; }
+    .magnify-4 { animation-delay: 0.9s; left: 40%; }
+    .magnify-5 { animation-delay: 1.2s; left: 50%; }
+    .magnify-6 { animation-delay: 1.5s; left: 60%; }
+    .magnify-7 { animation-delay: 1.8s; left: 70%; }
+    .magnify-8 { animation-delay: 2.1s; left: 80%; }
+    .magnify-9 { animation-delay: 2.4s; left: 90%; }
+    .magnify-10 { animation-delay: 2.7s; left: 85%; }
+    .magnify-11 { animation-delay: 3.0s; left: 75%; }
+    .magnify-12 { animation-delay: 3.3s; left: 65%; }
+    .magnify-13 { animation-delay: 3.6s; left: 55%; }
+    .magnify-14 { animation-delay: 3.9s; left: 45%; }
+    .magnify-15 { animation-delay: 4.2s; left: 35%; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -615,7 +642,7 @@ class CriminologyProfessionalBot:
         """Create specialized prompt based on user role and access level"""
         
         base_context = f"""
-You are CrimInsight SKN, a professional criminology assistant specifically designed for law enforcement and criminal justice professionals in St. Kitts and Nevis. 
+You are SECURO, a professional criminology assistant specifically designed for law enforcement and criminal justice professionals in St. Kitts and Nevis. 
 
 **Current User Profile:**
 - Role: {user_role}
@@ -786,8 +813,33 @@ For specific legal interpretations, consult with the Director of Public Prosecut
         user_role = st.session_state.get('user_role', 'Professional')
         access_level = st.session_state.get('access_level', 1)
 
+        # Handle greetings first
+        if any(greeting in user_input_lower for greeting in ["hi", "hello", "hey", "good morning", "good afternoon", "good evening"]):
+            return f"""**Good day, Officer {st.session_state.current_user}!**
+
+Welcome to SECURO - your professional crime mitigation assistant for St. Kitts and Nevis law enforcement.
+
+**I'm here to assist you with:**
+- Case documentation and analysis
+- Legal references and criminal code queries
+- Investigation protocols and procedures
+- Crime statistics and intelligence analysis
+- Professional contact directory
+- Crime hotspot mapping
+- Forensic guidance and evidence handling
+
+**How may I assist with your professional duties today?**
+
+*For crime mapping, just ask to "show crime map" or "display hotspots"*
+*For statistics, specify a year (2022, 2023, or 2024)*
+            """
+
+        # Handle crime map requests
+        elif any(word in user_input_lower for word in ["map", "hotspot", "crime map", "mapping", "location"]):
+            return "crime_map_requested"
+
         # Handle statistics requests with year detection
-        if any(word in user_input_lower for word in ["statistics", "data", "trends", "numbers", "crimes"]):
+        elif any(word in user_input_lower for word in ["statistics", "data", "trends", "numbers", "crimes"]):
             # Look for year in the query
             import re
             year_match = re.search(r'\b(20\d{2})\b', user_input)
@@ -1033,17 +1085,31 @@ For specific legal interpretations, consult with the Director of Public Prosecut
         return m
 
 
-def crime_celebration_effect():
-    """Create crime-themed celebration effect instead of balloons"""
+def magnifying_glass_celebration():
+    """Create professional magnifying glass celebration effect"""
     st.markdown("""
-    <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999;">
-        <div style="position: absolute; top: 20%; left: 10%; animation: crime-alert 2s ease-in-out;">🚨</div>
-        <div style="position: absolute; top: 30%; right: 15%; animation: crime-alert 2.5s ease-in-out;">⚖️</div>
-        <div style="position: absolute; top: 50%; left: 20%; animation: crime-alert 3s ease-in-out;">🔍</div>
-        <div style="position: absolute; top: 40%; right: 25%; animation: crime-alert 2.2s ease-in-out;">👮</div>
-        <div style="position: absolute; top: 60%; left: 50%; animation: crime-alert 2.8s ease-in-out;">📋</div>
-        <div style="position: absolute; top: 25%; left: 60%; animation: crime-alert 2.3s ease-in-out;">🔐</div>
+    <div id="magnify-container">
+        <div class="magnify-celebration magnify-1">🔍</div>
+        <div class="magnify-celebration magnify-2">🔍</div>
+        <div class="magnify-celebration magnify-3">🔍</div>
+        <div class="magnify-celebration magnify-4">🔍</div>
+        <div class="magnify-celebration magnify-5">🔍</div>
+        <div class="magnify-celebration magnify-6">🔍</div>
+        <div class="magnify-celebration magnify-7">🔍</div>
+        <div class="magnify-celebration magnify-8">🔍</div>
+        <div class="magnify-celebration magnify-9">🔍</div>
+        <div class="magnify-celebration magnify-10">🔍</div>
+        <div class="magnify-celebration magnify-11">🔍</div>
+        <div class="magnify-celebration magnify-12">🔍</div>
+        <div class="magnify-celebration magnify-13">🔍</div>
+        <div class="magnify-celebration magnify-14">🔍</div>
+        <div class="magnify-celebration magnify-15">🔍</div>
     </div>
+    <script>
+        setTimeout(function() {
+            document.getElementById('magnify-container').remove();
+        }, 6000);
+    </script>
     """, unsafe_allow_html=True)
 
 
@@ -1099,8 +1165,8 @@ def show_professional_login():
                 success, message = st.session_state.auth.login(username, password)
                 if success:
                     st.success(f"Access Granted: {message}")
-                    crime_celebration_effect()
-                    time.sleep(2)
+                    magnifying_glass_celebration()
+                    time.sleep(3)
                     st.rerun()
                 else:
                     st.error(f"Access Denied: {message}")
@@ -1139,7 +1205,7 @@ def show_professional_login():
                     if success:
                         st.success(f"Registration Successful: {message}")
                         st.info("Your professional account has been created. You may now login to SECURO.")
-                        crime_celebration_effect()
+                        magnifying_glass_celebration()
                     else:
                         st.error(f"Registration Failed: {message}")
             else:
@@ -1196,16 +1262,7 @@ def main():
 
     bot = st.session_state.professional_bot
 
-    # Display Crime Hotspot Map for Public Access (moved from sidebar)
-    st.markdown('<div class="crime-map-container">', unsafe_allow_html=True)
-    st.subheader("🗺️ St. Kitts & Nevis Crime Hotspot Map")
-    st.markdown("*Interactive crime intelligence map showing current hotspots and police stations*")
-    
-    crime_map = bot.create_professional_crime_map()
-    folium_static(crime_map, width=800, height=400)
-    st.markdown('</div>', unsafe_allow_html=True)
-
-    # Enhanced professional sidebar (removed Crime Statistics Dashboard)
+    # Enhanced professional sidebar with direct emergency contacts
     with st.sidebar:
         st.header("Professional Tools")
         
@@ -1215,24 +1272,26 @@ def main():
         
         st.divider()
         
-        # Emergency protocols - FIXED with proper button text
-        st.subheader("Emergency Protocols")
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("🚨 Police Dispatch", use_container_width=True, help="911 Emergency"):
-                st.session_state.messages.append({
-                    "role": "assistant", 
-                    "content": "**EMERGENCY DISPATCH PROTOCOL**\n\n**Immediate:** Call 911\n**Direct Line:** (869) 465-2241\n\n**For Officer Safety:**\n- Request backup if needed\n- Provide location and situation\n- Follow tactical protocols\n\n*This is a training simulation - use actual emergency numbers in real situations.*"
-                })
-                st.rerun()
+        # Emergency protocols with direct links for St. Kitts & Nevis
+        st.subheader("🚨 Emergency Contacts")
         
-        with col2:
-            if st.button("🏥 Medical Emergency", use_container_width=True, help="Medical Response"):
-                st.session_state.messages.append({
-                    "role": "assistant",
-                    "content": "**MEDICAL EMERGENCY PROTOCOL**\n\n**Hospital Emergency:** (869) 465-2551\n**Ambulance:** 911\n\n**For Officer-Involved Incidents:**\n- Secure scene first\n- Request EMS immediately\n- Document all actions\n- Notify supervisor\n\n*Follow department medical emergency procedures.*"
-                })
-                st.rerun()
+        st.markdown("""
+        **IMMEDIATE EMERGENCY RESPONSE**
+        
+        🚨 **Police Emergency Dispatch**
+        📞 **Call: [911](tel:911)** (Emergency Line)
+        📞 **Direct: [(869) 465-2241](tel:+18694652241)** (Police HQ)
+        
+        🏥 **Medical Emergency**
+        📞 **Call: [911](tel:911)** (Medical Emergency)
+        📞 **Hospital: [(869) 465-2551](tel:+18694652551)** (Joseph N. France Hospital)
+        
+        ⚖️ **Legal/Court Emergency**
+        📞 **DPP Office: [(869) 467-1000](tel:+18694671000)**
+        📞 **Court Registry: [(869) 465-2366](tel:+18694652366)**
+        
+        *Click phone numbers to dial directly*
+        """, unsafe_allow_html=True)
         
         st.divider()
         
@@ -1283,41 +1342,19 @@ def main():
         
         if st.button("🗑️ Clear Case File", use_container_width=True):
             st.session_state.messages = []
-            st.session_state.messages.append({
-                "role": "assistant",
-                "content": "**CASE FILE CLEARED**\n\nAll conversation history has been securely cleared. Ready for new case input.\n\n*Remember to save any important information to your official case management system before clearing.*"
-            })
+            st.success("Case file cleared. Ready for new input.")
             st.rerun()
         
         # System information
         st.divider()
         st.caption(f"**Last Updated:** {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}")
-        st.caption("**Version:** SECURO v2.0")
+        st.caption("**Version:** SECURO v2.1")
         st.caption("**Jurisdiction:** St. Kitts & Nevis")
 
     # Display chat messages
     chat_container = st.container()
     with chat_container:
-        # Welcome message for new sessions
-        if not st.session_state.messages:
-            welcome_msg = f"""**Welcome to SECURO Professional System**
-
-**Officer {st.session_state.current_user}** - You are now connected to the SECURO Crime Mitigation AI Chat Bot for St. Kitts and Nevis law enforcement.
-
-**Available Services:**
-- Case documentation and analysis
-- Legal reference and statute lookup
-- Investigation protocols and procedures
-- Crime statistics and intelligence analysis (ask for specific years: 2022, 2023, 2024)
-- Professional contact directory
-- Tactical crime mapping (displayed above)
-
-**Security Notice:** This system maintains professional standards and confidentiality. All interactions are logged for quality assurance and security purposes.
-
-**How may SECURO assist with your professional duties today?**
-            """
-            st.session_state.messages.append({"role": "assistant", "content": welcome_msg})
-        
+        # Display all messages without automatic welcome
         for message in st.session_state.messages:
             display_message(message["role"], message["content"])
 
@@ -1329,6 +1366,19 @@ def main():
         # Get professional response
         with st.spinner("Processing professional inquiry..."):
             response = bot.process_professional_query(prompt)
+        
+        # Handle special responses
+        if response == "crime_map_requested":
+            # Display crime map in main area
+            st.markdown('<div class="crime-map-container">', unsafe_allow_html=True)
+            st.subheader("🗺️ St. Kitts & Nevis Crime Hotspot Map")
+            st.markdown("*Interactive crime intelligence map showing current hotspots and police stations*")
+            
+            crime_map = bot.create_professional_crime_map()
+            folium_static(crime_map, width=800, height=400)
+            st.markdown('</div>', unsafe_allow_html=True)
+            
+            response = "**CRIME HOTSPOT MAP DISPLAYED**\n\nThe interactive crime intelligence map above shows:\n- Current crime hotspots with risk levels\n- Police station locations\n- Crime incident data by area\n- Multiple view layers (satellite, street, terrain)\n\nUse the map controls to zoom and switch between different views for tactical planning."
         
         # Add bot response
         st.session_state.messages.append({"role": "assistant", "content": response})
