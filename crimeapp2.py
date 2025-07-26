@@ -1,9 +1,3 @@
-# System information
-st.divider()
-st.caption(f"**Last Updated:** {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}")
-st.caption("**Version:** SECURO v2.0")
-st.caption("**Jurisdiction:** St. Kitts & Nevis")
-
 import streamlit as st
 import datetime
 import json
@@ -373,10 +367,10 @@ class GeminiAPI:
                 else:
                     return "I apologize, but I couldn't generate a response. Please rephrase your professional inquiry."
             else:
-                return f"⚠️ **System Error** ⚠️\n\nAPI response code {response.status_code}. Please contact system administrator."
+                return f"System Error - API response code {response.status_code}. Please contact system administrator."
                
         except Exception as e:
-            return f"⚠️ **Connection Error** ⚠️\n\nUnable to process request: {str(e)}"
+            return f"Connection Error - Unable to process request: {str(e)}"
 
 class CriminologyProfessionalBot:
     def __init__(self):
@@ -556,11 +550,11 @@ class CriminologyProfessionalBot:
             "2024": {
                 "total_reported": 1847,
                 "by_category": {
-                    "violent_crimes": {"count": 267, "clearance_rate": 78.3, "trend": "↓ -12%"},
-                    "property_crimes": {"count": 891, "clearance_rate": 65.2, "trend": "↓ -8%"},
-                    "drug_offenses": {"count": 423, "clearance_rate": 85.1, "trend": "↑ +15%"},
-                    "white_collar": {"count": 89, "clearance_rate": 72.0, "trend": "↑ +23%"},
-                    "cybercrimes": {"count": 177, "clearance_rate": 45.8, "trend": "↑ +67%"}
+                    "violent_crimes": {"count": 267, "clearance_rate": 78.3, "trend": "down 12%"},
+                    "property_crimes": {"count": 891, "clearance_rate": 65.2, "trend": "down 8%"},
+                    "drug_offenses": {"count": 423, "clearance_rate": 85.1, "trend": "up 15%"},
+                    "white_collar": {"count": 89, "clearance_rate": 72.0, "trend": "up 23%"},
+                    "cybercrimes": {"count": 177, "clearance_rate": 45.8, "trend": "up 67%"}
                 },
                 "by_location": {
                     "Basseterre": {"incidents": 734, "per_capita": 45.2},
@@ -739,25 +733,25 @@ For specific legal interpretations, consult with the Director of Public Prosecut
         """Return professional contact directory"""
         return """**PROFESSIONAL CONTACT DIRECTORY - ST. KITTS & NEVIS**
 
-**🏢 POLICE HEADQUARTERS**
+**POLICE HEADQUARTERS**
 - **Phone:** (869) 465-2241
 - **Address:** Cayon Street, Basseterre
 - **Departments:** CID, Traffic, Community Policing, Narcotics
 
-**🔬 FORENSIC SERVICES**
+**FORENSIC SERVICES**
 - **Phone:** (869) 465-2241 ext. 234
 - **Services:** DNA, Ballistics, Digital Forensics, Crime Scene
 
-**⚖️ LEGAL SYSTEM**
+**LEGAL SYSTEM**
 - **High Court:** (869) 465-2366 (Government Road, Basseterre)
 - **Magistrate Court:** (869) 465-2521
 - **DPP Office:** (869) 467-1000
 
-**🏥 MEDICAL EXAMINER**
+**MEDICAL EXAMINER**
 - **Joseph N. France Hospital:** (869) 465-2551
 - **Pathology Services:** Available on request
 
-**📋 ADMINISTRATIVE**
+**ADMINISTRATIVE**
 - **Court Registry:** (869) 465-2366
 - **Legal Aid:** (869) 465-2521
 - **Probation Services:** (869) 467-1234
@@ -772,7 +766,7 @@ For specific legal interpretations, consult with the Director of Public Prosecut
         if "crime scene" in query_lower:
             return """**CRIME SCENE INVESTIGATION PROTOCOL**
 
-**🔒 INITIAL RESPONSE (First 30 minutes)**
+**INITIAL RESPONSE (First 30 minutes)**
 1. Secure perimeter with barrier tape
 2. Establish single entry/exit point
 3. Document initial observations in notebook
@@ -780,20 +774,20 @@ For specific legal interpretations, consult with the Director of Public Prosecut
 5. Call appropriate specialists (forensics, medical examiner)
 6. Establish command post outside scene
 
-**📸 DOCUMENTATION PHASE**
+**DOCUMENTATION PHASE**
 1. **Photography:** Wide shots → Medium shots → Close-ups
 2. **Sketching:** Rough sketch → Finished scale drawing
 3. **Evidence Log:** Number, photograph, document each item
 4. **Environmental:** Weather, lighting, temperature conditions
 
-**🧤 EVIDENCE COLLECTION**
+**EVIDENCE COLLECTION**
 1. Use proper PPE (gloves, shoe covers, suits)
 2. Work from outside → inside
 3. Collect most fragile evidence first
 4. Maintain chain of custody documentation
 5. Package and label immediately
 
-**⚠️ CRITICAL REMINDERS**
+**CRITICAL REMINDERS**
 - NEVER move evidence before documentation
 - Maintain continuous security of scene
 - Document ALL personnel who enter scene
@@ -803,14 +797,14 @@ For specific legal interpretations, consult with the Director of Public Prosecut
         elif "evidence" in query_lower:
             return """**EVIDENCE HANDLING PROTOCOL**
 
-**📦 COLLECTION STANDARDS**
+**COLLECTION STANDARDS**
 - Use appropriate tools for each evidence type
 - Avoid contamination through proper PPE
 - Document exact location with coordinates/measurements
 - Photograph evidence in situ before collection
 - Use clean packaging for each item
 
-**🏷️ LABELING REQUIREMENTS**
+**LABELING REQUIREMENTS**
 - Case number
 - Item number
 - Date and time of collection
@@ -818,14 +812,14 @@ For specific legal interpretations, consult with the Director of Public Prosecut
 - Collecting officer name and badge
 - Brief description
 
-**🔐 CHAIN OF CUSTODY**
+**CHAIN OF CUSTODY**
 - Document every person who handles evidence
 - Note time, date, purpose of each transfer
 - Use sealed evidence bags with tamper-evident tape
 - Store in appropriate conditions (temperature, humidity)
 - Maintain access log to evidence storage
 
-**📋 DOCUMENTATION**
+**DOCUMENTATION**
 - Evidence log with complete descriptions
 - Photographs of evidence as collected
 - Chain of custody forms
@@ -835,21 +829,21 @@ For specific legal interpretations, consult with the Director of Public Prosecut
         else:
             return """**GENERAL INVESTIGATION PROTOCOLS**
 
-**🎯 CASE INITIATION**
+**CASE INITIATION**
 1. Complaint/report received
 2. Initial assessment of allegations
 3. Case file creation
 4. Resource allocation
 5. Investigation plan development
 
-**🔍 INVESTIGATION PROCESS**
+**INVESTIGATION PROCESS**
 1. Evidence collection and preservation
 2. Witness interviews
 3. Suspect identification and questioning
 4. Expert consultations
 5. Case file compilation
 
-**📝 CASE COMPLETION**
+**CASE COMPLETION**
 1. Evidence review and analysis
 2. Consultation with prosecutors
 3. Charge recommendation
@@ -863,29 +857,29 @@ For specific legal interpretations, consult with the Director of Public Prosecut
         """Return current crime statistics"""
         return """**CRIME STATISTICS SUMMARY - ST. KITTS & NEVIS (2024)**
 
-**📊 OVERALL STATISTICS**
+**OVERALL STATISTICS**
 - **Total Reported Crimes:** 1,847
 - **Overall Clearance Rate:** 69.3%
 - **Year-over-Year Change:** -6.8% (decrease)
 
-**🔍 BY CATEGORY**
-- **Violent Crimes:** 267 cases (78.3% clearance) ↓ 12%
-- **Property Crimes:** 891 cases (65.2% clearance) ↓ 8%
-- **Drug Offenses:** 423 cases (85.1% clearance) ↑ 15%
-- **White Collar:** 89 cases (72.0% clearance) ↑ 23%
-- **Cybercrimes:** 177 cases (45.8% clearance) ↑ 67%
+**BY CATEGORY**
+- **Violent Crimes:** 267 cases (78.3% clearance) down 12%
+- **Property Crimes:** 891 cases (65.2% clearance) down 8%
+- **Drug Offenses:** 423 cases (85.1% clearance) up 15%
+- **White Collar:** 89 cases (72.0% clearance) up 23%
+- **Cybercrimes:** 177 cases (45.8% clearance) up 67%
 
-**🗺️ BY LOCATION (Incidents per 1,000 residents)**
+**BY LOCATION (Incidents per 1,000 residents)**
 - **Basseterre:** 734 incidents (45.2 per capita)
 - **Charlestown:** 289 incidents (38.7 per capita)
 - **Sandy Point:** 156 incidents (42.1 per capita)
 
-**⏰ TEMPORAL PATTERNS**
+**TEMPORAL PATTERNS**
 - **Peak Hours:** 22:00-02:00, 14:00-18:00
 - **Peak Days:** Friday, Saturday, Sunday
 - **Seasonal:** Higher during tourist season (Dec-Apr)
 
-**📈 KEY TRENDS**
+**KEY TRENDS**
 - Cybercrime incidents increasing rapidly (+67%)
 - Traditional violent crime decreasing (-12%)
 - Drug enforcement showing strong results (85% clearance)
@@ -1065,7 +1059,7 @@ def show_professional_login():
     # Security notice with enhanced styling
     st.markdown("""
     <div style="background: rgba(139, 0, 0, 0.8); padding: 15px; border-radius: 10px; border: 2px solid #FF0000; margin: 20px 0; text-align: center;">
-        <h3 style="color: #FFFF00; margin: 0;">🔒 RESTRICTED ACCESS SYSTEM 🔒</h3>
+        <h3 style="color: #FFFF00; margin: 0;">RESTRICTED ACCESS SYSTEM</h3>
         <p style="color: #ffffff; margin: 5px 0;">Authorized Personnel Only - Law Enforcement & Criminal Justice Professionals</p>
     </div>
     """, unsafe_allow_html=True)
@@ -1073,29 +1067,29 @@ def show_professional_login():
     # Login container
     st.markdown('<div class="login-container">', unsafe_allow_html=True)
     
-    tab1, tab2 = st.tabs(["🔐 Professional Login", "📝 Register Professional Account"])
+    tab1, tab2 = st.tabs(["Professional Login", "Register Professional Account"])
     
     with tab1:
         st.subheader("Access SECURO System")
         username = st.text_input("Professional Username", key="login_username", placeholder="Enter your professional username")
         password = st.text_input("Secure Password", type="password", key="login_password", placeholder="Enter your secure password")
         
-        if st.button("🚪 ACCESS SECURO SYSTEM", use_container_width=True, type="primary"):
+        if st.button("ACCESS SECURO SYSTEM", use_container_width=True, type="primary"):
             if username and password:
                 success, message = st.session_state.auth.login(username, password)
                 if success:
-                    st.success(f"✅ {message}")
+                    st.success(f"Access Granted: {message}")
                     st.balloons()
                     time.sleep(1)
                     st.rerun()
                 else:
-                    st.error(f"❌ {message}")
+                    st.error(f"Access Denied: {message}")
             else:
-                st.error("⚠️ Please enter your professional credentials")
+                st.error("Please enter your professional credentials")
     
     with tab2:
         st.subheader("Register Professional Account")
-        st.warning("⚠️ Professional verification required for account activation")
+        st.warning("Professional verification required for account activation")
         
         new_username = st.text_input("Professional Username", key="new_username", placeholder="Choose a professional username")
         new_password = st.text_input("Secure Password (8+ characters)", type="password", key="new_password", placeholder="Create a strong password")
@@ -1114,22 +1108,22 @@ def show_professional_login():
         badge_number = st.text_input("Badge/ID Number (if applicable)", placeholder="Enter badge or ID number")
         department = st.text_input("Department/Agency", placeholder="Enter your department or agency")
         
-        if st.button("🔒 SUBMIT PROFESSIONAL REGISTRATION", use_container_width=True):
+        if st.button("SUBMIT PROFESSIONAL REGISTRATION", use_container_width=True):
             if new_username and new_password and confirm_password:
                 if new_password != confirm_password:
-                    st.error("❌ Passwords do not match")
+                    st.error("Passwords do not match")
                 else:
                     success, message = st.session_state.auth.create_account(
                         new_username, new_password, role, badge_number, department
                     )
                     if success:
-                        st.success(f"✅ {message}")
-                        st.info("🎉 Your professional account has been created. You may now login to SECURO.")
+                        st.success(f"Registration Successful: {message}")
+                        st.info("Your professional account has been created. You may now login to SECURO.")
                         st.balloons()
                     else:
-                        st.error(f"❌ {message}")
+                        st.error(f"Registration Failed: {message}")
             else:
-                st.error("⚠️ Please complete all required fields")
+                st.error("Please complete all required fields")
     
     st.markdown('</div>', unsafe_allow_html=True)  # Close login-container
     st.markdown('</div>', unsafe_allow_html=True)  # Close login-content
@@ -1184,22 +1178,22 @@ def main():
 
     # Enhanced professional sidebar
     with st.sidebar:
-        st.header("🏛️ Professional Tools")
+        st.header("Professional Tools")
         
         # System status
-        st.success("🟢 System Online")
-        st.info(f"👤 {st.session_state.user_role}")
+        st.success("System Online")
+        st.info(f"User: {st.session_state.user_role}")
         
         st.divider()
         
         # Emergency protocols
-        st.subheader("🚨 Emergency Protocols")
+        st.subheader("Emergency Protocols")
         col1, col2 = st.columns(2)
         with col1:
             if st.button("Police Dispatch", use_container_width=True, help="911 Emergency"):
                 st.session_state.messages.append({
                     "role": "assistant", 
-                    "content": "**🚨 EMERGENCY DISPATCH PROTOCOL**\n\n**Immediate:** Call 911\n**Direct Line:** (869) 465-2241\n\n**For Officer Safety:**\n- Request backup if needed\n- Provide location and situation\n- Follow tactical protocols\n\n*This is a training simulation - use actual emergency numbers in real situations.*"
+                    "content": "**EMERGENCY DISPATCH PROTOCOL**\n\n**Immediate:** Call 911\n**Direct Line:** (869) 465-2241\n\n**For Officer Safety:**\n- Request backup if needed\n- Provide location and situation\n- Follow tactical protocols\n\n*This is a training simulation - use actual emergency numbers in real situations.*"
                 })
                 st.rerun()
         
@@ -1207,14 +1201,14 @@ def main():
             if st.button("Medical Emergency", use_container_width=True, help="Medical Response"):
                 st.session_state.messages.append({
                     "role": "assistant",
-                    "content": "**🏥 MEDICAL EMERGENCY PROTOCOL**\n\n**Hospital Emergency:** (869) 465-2551\n**Ambulance:** 911\n\n**For Officer-Involved Incidents:**\n- Secure scene first\n- Request EMS immediately\n- Document all actions\n- Notify supervisor\n\n*Follow department medical emergency procedures.*"
+                    "content": "**MEDICAL EMERGENCY PROTOCOL**\n\n**Hospital Emergency:** (869) 465-2551\n**Ambulance:** 911\n\n**For Officer-Involved Incidents:**\n- Secure scene first\n- Request EMS immediately\n- Document all actions\n- Notify supervisor\n\n*Follow department medical emergency procedures.*"
                 })
                 st.rerun()
         
         st.divider()
         
         # Professional resources
-        st.subheader("📋 Case Management")
+        st.subheader("Case Management")
         
         if st.button("Incident Report Template", use_container_width=True):
             template = bot.get_case_template('incident_report')
@@ -1243,7 +1237,7 @@ def main():
         st.divider()
         
         # Analytics and intelligence
-        st.subheader("📊 Intelligence Analysis")
+        st.subheader("Intelligence Analysis")
         
         if st.button("Crime Statistics Dashboard", use_container_width=True):
             fig = bot.create_enhanced_crime_chart()
@@ -1275,7 +1269,7 @@ def main():
         st.divider()
         
         # System utilities
-        st.subheader("🛠️ System Utilities")
+        st.subheader("System Utilities")
         
         if st.button("Clear Case File", use_container_width=True):
             st.session_state.messages = []
@@ -1288,7 +1282,7 @@ def main():
         # System information
         st.divider()
         st.caption(f"**Last Updated:** {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}")
-        st.caption("**Version:** CrimInsight SKN v2.0")
+        st.caption("**Version:** SECURO v2.0")
         st.caption("**Jurisdiction:** St. Kitts & Nevis")
 
     # Display chat messages
@@ -1301,12 +1295,12 @@ def main():
 **Officer {st.session_state.current_user}** - You are now connected to the SECURO Crime Mitigation AI Chat Bot for St. Kitts and Nevis law enforcement.
 
 **Available Services:**
-- 📋 Case documentation and analysis
-- ⚖️ Legal reference and statute lookup
-- 🔍 Investigation protocols and procedures
-- 📊 Crime statistics and intelligence analysis
-- 📞 Professional contact directory
-- 🗺️ Tactical crime mapping
+- Case documentation and analysis
+- Legal reference and statute lookup
+- Investigation protocols and procedures
+- Crime statistics and intelligence analysis
+- Professional contact directory
+- Tactical crime mapping
 
 **Security Notice:** This system maintains professional standards and confidentiality. All interactions are logged for quality assurance and security purposes.
 
@@ -1323,7 +1317,7 @@ def main():
         st.session_state.messages.append({"role": "user", "content": prompt})
         
         # Get professional response
-        with st.spinner("🔍 Processing professional inquiry..."):
+        with st.spinner("Processing professional inquiry..."):
             response = bot.process_professional_query(prompt)
         
         # Add bot response
