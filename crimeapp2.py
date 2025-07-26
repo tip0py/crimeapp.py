@@ -1262,94 +1262,128 @@ def main():
 
     bot = st.session_state.professional_bot
 
-    # Enhanced professional sidebar with direct emergency contacts
-    with st.sidebar:
-        st.header("Professional Tools")
-        
-        # System status
-        st.success("System Online")
-        st.info(f"User: {st.session_state.user_role}")
-        
-        st.divider()
-        
-        # Emergency protocols with direct links for St. Kitts & Nevis
-        st.subheader("🚨 Emergency Contacts")
-        
-        st.markdown("""
-        **IMMEDIATE EMERGENCY RESPONSE**
-        
-        🚨 **Police Emergency Dispatch**
-        📞 **Call: [911](tel:911)** (Emergency Line)
-        📞 **Direct: [(869) 465-2241](tel:+18694652241)** (Police HQ)
-        
-        🏥 **Medical Emergency**
-        📞 **Call: [911](tel:911)** (Medical Emergency)
-        📞 **Hospital: [(869) 465-2551](tel:+18694652551)** (Joseph N. France Hospital)
-        
-        ⚖️ **Legal/Court Emergency**
-        📞 **DPP Office: [(869) 467-1000](tel:+18694671000)**
-        📞 **Court Registry: [(869) 465-2366](tel:+18694652366)**
-        
-        *Click phone numbers to dial directly*
-        """, unsafe_allow_html=True)
-        
-        st.divider()
-        
-        # Professional resources
-        st.subheader("Case Management")
-        
-        if st.button("📋 Incident Report Template", use_container_width=True):
-            template = bot.get_case_template('incident_report')
-            st.session_state.messages.append({
-                "role": "assistant",
-                "content": f"**INCIDENT REPORT TEMPLATE GENERATED**\n\n{template}"
-            })
+    # Sidebar toggle functionality
+    if "sidebar_open" not in st.session_state:
+        st.session_state.sidebar_open = True
+    
+    # Sidebar toggle button in header
+    with col1:
+        if st.button("☰ Menu", key="sidebar_toggle"):
+            st.session_state.sidebar_open = not st.session_state.sidebar_open
             st.rerun()
-        
-        if st.button("🔍 Case Analysis Framework", use_container_width=True):
-            template = bot.get_case_template('case_analysis')
-            st.session_state.messages.append({
-                "role": "assistant",
-                "content": f"**CASE ANALYSIS FRAMEWORK GENERATED**\n\n{template}"
-            })
-            st.rerun()
-        
-        if st.button("⚖️ Legal Reference Guide", use_container_width=True):
-            legal_ref = bot.get_legal_reference("general")
-            st.session_state.messages.append({
-                "role": "assistant",
-                "content": legal_ref
-            })
-            st.rerun()
-        
-        st.divider()
-        
-        # Professional directory
-        st.subheader("Directory & Contacts")
-        
-        if st.button("📞 Professional Directory", use_container_width=True):
-            directory = bot.get_professional_directory()
-            st.session_state.messages.append({
-                "role": "assistant",
-                "content": directory
-            })
-            st.rerun()
-        
-        st.divider()
-        
-        # System utilities
-        st.subheader("System Utilities")
-        
-        if st.button("🗑️ Clear Case File", use_container_width=True):
-            st.session_state.messages = []
-            st.success("Case file cleared. Ready for new input.")
-            st.rerun()
-        
-        # System information
-        st.divider()
-        st.caption(f"**Last Updated:** {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}")
-        st.caption("**Version:** SECURO v2.1")
-        st.caption("**Jurisdiction:** St. Kitts & Nevis")
+    
+    # Show sidebar only if open
+    if st.session_state.sidebar_open:
+        with st.sidebar:
+            st.header("🔐 Professional Tools")
+            
+            # System status - clean design
+            st.markdown("""
+            <div style="background: #1a4d1a; padding: 10px; border-radius: 8px; margin: 10px 0; text-align: center;">
+                <strong>🟢 SYSTEM ONLINE</strong><br>
+                <small>Officer: """ + st.session_state.user_role + """</small>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            st.divider()
+            
+            # Emergency protocols - cleaner design
+            st.subheader("🚨 Emergency Response")
+            
+            # Emergency buttons with clean design
+            col_a, col_b = st.columns(2)
+            
+            with col_a:
+                if st.button("🚨\nPolice\nDispatch", use_container_width=True, help="Emergency: 911 | HQ: (869) 465-2241"):
+                    st.markdown("""
+                    <div style="background: #8B0000; padding: 15px; border-radius: 8px; color: white; text-align: center; margin: 10px 0;">
+                        <h4>🚨 POLICE DISPATCH</h4>
+                        <p><strong>Emergency:</strong> <a href="tel:911" style="color: #FFFF00;">911</a></p>
+                        <p><strong>HQ Direct:</strong> <a href="tel:+18694652241" style="color: #FFFF00;">(869) 465-2241</a></p>
+                    </div>
+                    """, unsafe_allow_html=True)
+            
+            with col_b:
+                if st.button("🏥\nMedical\nEmergency", use_container_width=True, help="Emergency: 911 | Hospital: (869) 465-2551"):
+                    st.markdown("""
+                    <div style="background: #8B0000; padding: 15px; border-radius: 8px; color: white; text-align: center; margin: 10px 0;">
+                        <h4>🏥 MEDICAL EMERGENCY</h4>
+                        <p><strong>Emergency:</strong> <a href="tel:911" style="color: #FFFF00;">911</a></p>
+                        <p><strong>Hospital:</strong> <a href="tel:+18694652551" style="color: #FFFF00;">(869) 465-2551</a></p>
+                    </div>
+                    """, unsafe_allow_html=True)
+            
+            # Legal emergency
+            if st.button("⚖️ Legal/Court Emergency", use_container_width=True):
+                st.markdown("""
+                <div style="background: #8B0000; padding: 15px; border-radius: 8px; color: white; text-align: center; margin: 10px 0;">
+                    <h4>⚖️ LEGAL EMERGENCY</h4>
+                    <p><strong>DPP Office:</strong> <a href="tel:+18694671000" style="color: #FFFF00;">(869) 467-1000</a></p>
+                    <p><strong>Court Registry:</strong> <a href="tel:+18694652366" style="color: #FFFF00;">(869) 465-2366</a></p>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            st.divider()
+            
+            # Professional resources
+            st.subheader("📋 Case Management")
+            
+            if st.button("📋 Incident Report", use_container_width=True):
+                template = bot.get_case_template('incident_report')
+                st.session_state.messages.append({
+                    "role": "assistant",
+                    "content": f"**INCIDENT REPORT TEMPLATE GENERATED**\n\n{template}"
+                })
+                st.rerun()
+            
+            if st.button("🔍 Case Analysis", use_container_width=True):
+                template = bot.get_case_template('case_analysis')
+                st.session_state.messages.append({
+                    "role": "assistant",
+                    "content": f"**CASE ANALYSIS FRAMEWORK GENERATED**\n\n{template}"
+                })
+                st.rerun()
+            
+            if st.button("⚖️ Legal Reference", use_container_width=True):
+                legal_ref = bot.get_legal_reference("general")
+                st.session_state.messages.append({
+                    "role": "assistant",
+                    "content": legal_ref
+                })
+                st.rerun()
+            
+            st.divider()
+            
+            # Professional directory
+            st.subheader("📞 Contacts")
+            
+            if st.button("📞 Directory", use_container_width=True):
+                directory = bot.get_professional_directory()
+                st.session_state.messages.append({
+                    "role": "assistant",
+                    "content": directory
+                })
+                st.rerun()
+            
+            st.divider()
+            
+            # System utilities
+            st.subheader("🔧 System")
+            
+            if st.button("🗑️ Clear Chat", use_container_width=True):
+                st.session_state.messages = []
+                st.success("Chat cleared.")
+                st.rerun()
+            
+            # Clean system information
+            st.divider()
+            st.markdown("""
+            <div style="background: #333; padding: 8px; border-radius: 5px; font-size: 12px; text-align: center;">
+                <strong>SECURO v2.1</strong><br>
+                St. Kitts & Nevis<br>
+                """ + datetime.datetime.now().strftime('%Y-%m-%d %H:%M') + """
+            </div>
+            """, unsafe_allow_html=True)
 
     # Display chat messages
     chat_container = st.container()
@@ -1370,15 +1404,23 @@ def main():
         # Handle special responses
         if response == "crime_map_requested":
             # Display crime map in main area
-            st.markdown('<div class="crime-map-container">', unsafe_allow_html=True)
-            st.subheader("🗺️ St. Kitts & Nevis Crime Hotspot Map")
-            st.markdown("*Interactive crime intelligence map showing current hotspots and police stations*")
-            
-            crime_map = bot.create_professional_crime_map()
-            folium_static(crime_map, width=800, height=400)
-            st.markdown('</div>', unsafe_allow_html=True)
-            
-            response = "**CRIME HOTSPOT MAP DISPLAYED**\n\nThe interactive crime intelligence map above shows:\n- Current crime hotspots with risk levels\n- Police station locations\n- Crime incident data by area\n- Multiple view layers (satellite, street, terrain)\n\nUse the map controls to zoom and switch between different views for tactical planning."
+            with st.container():
+                st.markdown("---")
+                st.markdown('<div class="crime-map-container">', unsafe_allow_html=True)
+                st.subheader("🗺️ St. Kitts & Nevis Crime Hotspot Map")
+                st.markdown("*Interactive crime intelligence map showing current hotspots and police stations*")
+                
+                try:
+                    crime_map = bot.create_professional_crime_map()
+                    folium_static(crime_map, width=800, height=400)
+                    
+                    response = "**CRIME HOTSPOT MAP DISPLAYED ABOVE**\n\nThe interactive crime intelligence map shows:\n- Current crime hotspots with risk levels\n- Police station locations\n- Crime incident data by area\n- Multiple view layers (satellite, street, terrain)\n\nUse the map controls to zoom and switch between different views for tactical planning."
+                    
+                except Exception as e:
+                    response = f"**MAP ERROR**: Unable to display crime map. Error: {str(e)}\n\nPlease try again or contact system administrator."
+                
+                st.markdown('</div>', unsafe_allow_html=True)
+                st.markdown("---")
         
         # Add bot response
         st.session_state.messages.append({"role": "assistant", "content": response})
