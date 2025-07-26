@@ -1,0 +1,30 @@
+{
+  "2023": {
+    "total_crimes": 1230,
+    "homicide": 5,
+    "assault": 90,
+    "robbery": 28,
+    "burglary": 115,
+    "drug_possession": 62,
+    "drug_trafficking": 18,
+    "organized_crime": 7,
+    "white_collar": 3,
+    "cyber_crime": 14,
+    "clearance_rate": "72%",
+    "most_affected_areas": ["Basseterre", "Frigate Bay", "Sandy Point"]
+  },
+  "2024": {
+    "total_crimes": 1195,
+    "homicide": 4,
+    "assault": 85,
+    "robbery": 23,
+    "burglary": 108,
+    "drug_possession": 58,
+    "drug_trafficking": 14,
+    "organized_crime": 6,
+    "white_collar": 5,
+    "cyber_crime": 17,
+    "clearance_rate": "75%",
+    "most_affected_areas": ["Basseterre", "Charlestown", "Dieppe Bay"]
+  }
+}
