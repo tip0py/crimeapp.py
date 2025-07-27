@@ -11,7 +11,7 @@ import time
 import os
 
 st.set_page_config(
-    page_title="SECURO - Crime Mitigation AI Chat Bot",
+    page_title = "SECURO - Crime Mitigation AI Chat Bot",
     layout="wide",
     initial_sidebar_state="collapsed",
     menu_items=None
