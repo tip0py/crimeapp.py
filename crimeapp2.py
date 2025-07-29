@@ -9,6 +9,14 @@ from streamlit_folium import folium_static
 import hashlib
 import time
 import os
+import google.generativeai as genai
+
+# Configure Google AI
+GOOGLE_API_KEY = "AIzaSyBlAiRqnNHmm-Hfu8dCAx6dlVMROQ-c180"
+genai.configure(api_key=GOOGLE_API_KEY)
+
+# Initialize the AI model
+model = genai.GenerativeModel('gemini-1.5-flash')
 
 st.set_page_config(
     page_title="SECURO - Crime Mitigation AI Chat Bot",
@@ -395,37 +403,27 @@ class UserAuthentication:
 
 class GeminiAPI:
     def __init__(self):
-        # Using your existing API key
-        self.api_key = "AIzaSyDL60NbrgoHtbOuT-A-5WAfX3yqtZpyEpc"
+        # Using Google AI SDK instead of REST API
+        self.model = model
        
     def get_gemini_response(self, prompt):
         try:
-            API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key={self.api_key}"
-           
-            payload = {
-                "contents": [{"parts": [{"text": prompt}]}],
-                "generationConfig": {
-                    "temperature": 0.3,  # Lower temperature for more professional responses
-                    "topK": 40,
-                    "topP": 0.95,
-                    "maxOutputTokens": 2048,  # Increased for detailed responses
-                }
-            }
-           
-            headers = {"Content-Type": "application/json"}
-           
-            response = requests.post(API_URL, headers=headers, json=payload, timeout=30)
-           
-            if response.status_code == 200:
-                response_data = response.json()
-                if 'candidates' in response_data and len(response_data['candidates']) > 0:
-                    content = response_data['candidates'][0]['content']['parts'][0]['text']
-                    return content
-                else:
-                    return "I apologize, but I couldn't generate a response. Please rephrase your professional inquiry."
+            # Using the Google AI SDK generate_content method
+            response = self.model.generate_content(
+                prompt,
+                generation_config=genai.types.GenerationConfig(
+                    temperature=0.3,  # Lower temperature for more professional responses
+                    top_k=40,
+                    top_p=0.95,
+                    max_output_tokens=2048,  # Increased for detailed responses
+                )
+            )
+            
+            if response.text:
+                return response.text
             else:
-                return f"System Error - API response code {response.status_code}. Please contact system administrator."
-               
+                return "I apologize, but I couldn't generate a response. Please rephrase your professional inquiry."
+                
         except Exception as e:
             return f"Connection Error - Unable to process request: {str(e)}"
 
