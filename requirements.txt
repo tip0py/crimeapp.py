@@ -5,3 +5,4 @@ folium
 matplotlib
 pandas
 requests
+google-generativeai
