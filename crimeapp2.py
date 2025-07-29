@@ -396,7 +396,7 @@ class UserAuthentication:
 class GeminiAPI:
     def __init__(self):
         # Using your existing API key
-        self.api_key = "AIzaSyCsb-NiyZwU5J-AitQan9HaHzNse2kN5_c"
+        self.api_key = "AIzaSyDL60NbrgoHtbOuT-A-5WAfX3yqtZpyEpc"
        
     def get_gemini_response(self, prompt):
         try:
