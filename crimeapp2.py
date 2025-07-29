@@ -640,12 +640,29 @@ class CriminologyProfessionalBot:
         """Create specialized prompt based on user role and access level"""
         
         base_context = f"""
-You are SECURO, a professional criminology assistant specifically designed for law enforcement and criminal justice professionals in St. Kitts and Nevis. 
+You are SECURO, an elite AI criminology specialist with 15+ years of experience in Caribbean law enforcement. You're a seasoned detective who rose through the ranks in St. Kitts and Nevis, known for your sharp analytical mind, unwavering dedication to justice, and ability to explain complex legal matters clearly.
+
+**Your Personality:**
+- Authoritative yet approachable - you command respect but remain accessible
+- Direct communicator - you get straight to the point without unnecessary fluff
+- Methodical thinker - you approach every case with systematic precision
+- Mentor-like - you guide officers with patience and wisdom
+- Results-oriented - every response aims to help solve cases and maintain order
+- Caribbean professional - you understand the local context and culture
 
 **Current User Profile:**
 - Role: {user_role}
 - Access Level: {access_level}/5
 - Jurisdiction: St. Kitts and Nevis
+
+**Your Response Style:**
+- Keep responses CLEAR and CONCISE - no more than 3-4 paragraphs unless specifically asked for detailed analysis
+- Lead with the most important information first
+- Use bullet points for lists and procedures to improve readability
+- Provide adequate detail but avoid overwhelming the user
+- Include specific legal references only when directly relevant
+- End with actionable next steps when appropriate
+- Maintain professional authority while being helpful
 
 **Your Expertise Areas:**
 - Criminal Law (St. Christopher and Nevis Criminal Code)
@@ -668,17 +685,9 @@ You are SECURO, a professional criminology assistant specifically designed for l
 - Drug Prevention of Misuse Act
 - Police Act
 
-**Communication Style:**
-- Professional and precise
-- Evidence-based recommendations
-- Cite relevant legal sections when applicable
-- Consider Caribbean legal context
-- Maintain confidentiality and ethics
-- Provide actionable guidance
-
 **Query:** {user_input}
 
-Please provide a comprehensive, professional response that considers the user's role and the specific legal and procedural context of St. Kitts and Nevis.
+Respond as the experienced SECURO detective you are - professional, concise, and focused on helping this officer get results. Address them as "Officer" and provide clear, actionable guidance.
         """
         
         return base_context
@@ -703,63 +712,69 @@ Please provide a comprehensive, professional response that considers the user's 
         legal_response = "**LEGAL REFERENCE - ST. KITTS & NEVIS**\n\n"
         
         if any(word in query_lower for word in ["homicide", "murder", "killing"]):
-            legal_response += """**HOMICIDE OFFENSES**
-- **Criminal Code Sections 87-102**
-- Murder: Life imprisonment (Section 87)
-- Manslaughter: Up to 25 years (Section 92)
-- Infanticide: Up to 3 years (Section 95)
+            legal_response += """**HOMICIDE OFFENSES (Criminal Code Sections 87-102)**
 
-**Key Procedural Notes:**
-- Mandatory autopsy required
-- Forensic pathologist must be engaged
-- Scene preservation critical for 72+ hours
-- Crown counsel consultation required pre-charge
+**Key Charges:**
+• Murder: Life imprisonment (Section 87)
+• Manslaughter: Up to 25 years (Section 92)  
+• Infanticide: Up to 3 years (Section 95)
+
+**Critical Procedures:**
+• Mandatory autopsy required
+• Forensic pathologist engagement essential
+• Scene preservation: minimum 72 hours
+• Crown counsel consultation before charging
+
+**Next Step:** Secure scene and contact forensic pathologist immediately.
             """
         
         elif any(word in query_lower for word in ["theft", "stealing", "larceny"]):
-            legal_response += """**THEFT OFFENSES**
-- **Criminal Code Sections 201-250**
-- Simple theft: Up to 2 years (Section 201)
-- Theft over $5,000: Up to 7 years
-- Breaking and entering: Up to 14 years (Section 231)
+            legal_response += """**THEFT OFFENSES (Criminal Code Sections 201-250)**
+
+**Penalty Structure:**
+• Simple theft: Up to 2 years (Section 201)
+• Theft over $5,000: Up to 7 years
+• Breaking and entering: Up to 14 years (Section 231)
 
 **Evidence Requirements:**
-- Proof of ownership
-- Value assessment
-- Intent to permanently deprive
-- Identification evidence
+• Proof of ownership
+• Value assessment
+• Intent to permanently deprive
+• Positive identification
+
+**Next Step:** Document value and secure witness statements.
             """
         
         elif any(word in query_lower for word in ["assault", "battery", "violence"]):
-            legal_response += """**ASSAULT OFFENSES**
-- **Criminal Code Sections 56-74**
-- Common assault: Up to 1 year (Section 56)
-- Assault causing bodily harm: Up to 2 years
-- Aggravated assault: Up to 14 years (Section 58)
+            legal_response += """**ASSAULT OFFENSES (Criminal Code Sections 56-74)**
 
-**Documentation Required:**
-- Medical reports
-- Photographs of injuries
-- Witness statements
-- Victim impact statement
+**Charge Options:**
+• Common assault: Up to 1 year (Section 56)
+• Assault causing bodily harm: Up to 2 years
+• Aggravated assault: Up to 14 years (Section 58)
+
+**Documentation Needed:**
+• Medical reports with injury photographs
+• Witness statements
+• Victim impact statement
+
+**Next Step:** Arrange medical examination and photograph injuries.
             """
         
         else:
             legal_response += """**GENERAL LEGAL RESOURCES**
 
-**Primary Legislation:**
-- Criminal Code (St. Christopher and Nevis)
-- Evidence Act
-- Police Act
-- Cybercrime Act 2023
-- Domestic Violence Act 2020
+**Primary Acts:**
+• Criminal Code (St. Christopher and Nevis)
+• Evidence Act | Police Act
+• Cybercrime Act 2023 | Domestic Violence Act 2020
 
 **Key Contacts:**
-- DPP Office: (869) 467-1000
-- High Court Registry: (869) 465-2366
-- Legal Aid: (869) 465-2521
+• DPP Office: (869) 467-1000
+• Court Registry: (869) 465-2366
+• Legal Aid: (869) 465-2521
 
-For specific legal interpretations, consult with the Director of Public Prosecutions Office.
+**Officer, for specific legal interpretations, consult DPP Office directly.**
             """
         
         return legal_response
@@ -813,23 +828,17 @@ For specific legal interpretations, consult with the Director of Public Prosecut
 
         # Handle greetings first
         if any(greeting in user_input_lower for greeting in ["hi", "hello", "hey", "good morning", "good afternoon", "good evening"]):
-            return f"""**Good day, Officer {st.session_state.current_user}!**
+            return f"""**Officer {st.session_state.current_user}, SECURO reporting for duty.**
 
-Welcome to SECURO - your professional crime mitigation assistant for St. Kitts and Nevis law enforcement.
+I'm your AI criminology specialist - think of me as your experienced detective partner with 15+ years on the force in St. Kitts & Nevis.
 
-**I'm here to assist you with:**
-- Case documentation and analysis
-- Legal references and criminal code queries
-- Investigation protocols and procedures
-- Crime statistics and intelligence analysis
-- Professional contact directory
-- Crime hotspot mapping
-- Forensic guidance and evidence handling
+**Quick Access:**
+• Crime mapping: "show crime map"  
+• Statistics: "statistics 2024"  
+• Templates: "incident report" or "case analysis"  
+• Legal help: Ask about any criminal code section  
 
-**How may I assist with your professional duties today?**
-
-*For crime mapping, just ask to "show crime map" or "display hotspots"*
-*For statistics, specify a year (2022, 2023, or 2024)*
+**Ready to assist with your case work. What's the situation, Officer?**
             """
 
         # Handle crime map requests
@@ -848,14 +857,14 @@ Welcome to SECURO - your professional crime mitigation assistant for St. Kitts a
                     st.pyplot(fig)
                 return response
             else:
-                return "Please specify a year for crime statistics (e.g., 'Show me crime statistics for 2024'). Available years: 2022, 2023, 2024"
+                return "**Officer, please specify a year for crime statistics (e.g., 'Show me crime statistics for 2024').**\n\n**Available years:** 2022, 2023, 2024"
 
         # Handle specific professional requests
         elif any(word in user_input_lower for word in ["template", "report", "form", "document"]):
             if "incident" in user_input_lower:
-                return f"**INCIDENT REPORT TEMPLATE GENERATED**\n\n{self.get_case_template('incident_report')}"
+                return f"**INCIDENT REPORT TEMPLATE READY**\n\n{self.get_case_template('incident_report')}\n\n**Officer, template is ready for your case documentation.**"
             elif "analysis" in user_input_lower or "case" in user_input_lower:
-                return f"**CASE ANALYSIS TEMPLATE GENERATED**\n\n{self.get_case_template('case_analysis')}"
+                return f"**CASE ANALYSIS FRAMEWORK READY**\n\n{self.get_case_template('case_analysis')}\n\n**Officer, use this framework to structure your case analysis.**"
         
         elif any(word in user_input_lower for word in ["legal", "law", "statute", "criminal code"]):
             return self.get_legal_reference(user_input)
@@ -873,32 +882,28 @@ Welcome to SECURO - your professional crime mitigation assistant for St. Kitts a
 
     def get_professional_directory(self):
         """Return professional contact directory"""
-        return """**PROFESSIONAL CONTACT DIRECTORY - ST. KITTS & NEVIS**
+        return """**PROFESSIONAL CONTACT DIRECTORY**
 
 **POLICE HEADQUARTERS**
-- **Phone:** (869) 465-2241
-- **Address:** Cayon Street, Basseterre
-- **Departments:** CID, Traffic, Community Policing, Narcotics
+• Phone: (869) 465-2241
+• Address: Cayon Street, Basseterre
+• Departments: CID, Traffic, Community Policing, Narcotics
 
 **FORENSIC SERVICES**
-- **Phone:** (869) 465-2241 ext. 234
-- **Services:** DNA, Ballistics, Digital Forensics, Crime Scene
+• Phone: (869) 465-2241 ext. 234
+• Services: DNA, Ballistics, Digital Forensics, Crime Scene
 
 **LEGAL SYSTEM**
-- **High Court:** (869) 465-2366 (Government Road, Basseterre)
-- **Magistrate Court:** (869) 465-2521
-- **DPP Office:** (869) 467-1000
+• High Court: (869) 465-2366 (Government Road)
+• Magistrate Court: (869) 465-2521
+• DPP Office: (869) 467-1000
 
-**MEDICAL EXAMINER**
-- **Joseph N. France Hospital:** (869) 465-2551
-- **Pathology Services:** Available on request
+**MEDICAL/ADMINISTRATIVE**
+• Hospital: (869) 465-2551
+• Court Registry: (869) 465-2366
+• Legal Aid: (869) 465-2521
 
-**ADMINISTRATIVE**
-- **Court Registry:** (869) 465-2366
-- **Legal Aid:** (869) 465-2521
-- **Probation Services:** (869) 467-1234
-
-**For inter-agency coordination, use official channels and maintain professional protocols.**
+**Officer, use official channels for inter-agency coordination.**
         """
 
     def get_investigation_protocol(self, query):
@@ -909,90 +914,77 @@ Welcome to SECURO - your professional crime mitigation assistant for St. Kitts a
             return """**CRIME SCENE INVESTIGATION PROTOCOL**
 
 **INITIAL RESPONSE (First 30 minutes)**
-1. Secure perimeter with barrier tape
-2. Establish single entry/exit point
-3. Document initial observations in notebook
-4. Identify and separate witnesses
-5. Call appropriate specialists (forensics, medical examiner)
-6. Establish command post outside scene
+• Secure perimeter with barrier tape
+• Establish single entry/exit point
+• Document initial observations
+• Separate witnesses immediately
+• Call specialists (forensics, medical examiner)
 
 **DOCUMENTATION PHASE**
-1. **Photography:** Wide shots → Medium shots → Close-ups
-2. **Sketching:** Rough sketch → Finished scale drawing
-3. **Evidence Log:** Number, photograph, document each item
-4. **Environmental:** Weather, lighting, temperature conditions
+• Photography: Wide → Medium → Close-up shots
+• Sketching: Rough sketch then scale drawing
+• Evidence log: Number and photograph each item
+• Environmental conditions: Weather, lighting, temperature
 
 **EVIDENCE COLLECTION**
-1. Use proper PPE (gloves, shoe covers, suits)
-2. Work from outside → inside
-3. Collect most fragile evidence first
-4. Maintain chain of custody documentation
-5. Package and label immediately
+• Proper PPE: Gloves, shoe covers, protective suits
+• Work outside → inside
+• Collect fragile evidence first
+• Maintain chain of custody documentation
 
-**CRITICAL REMINDERS**
-- NEVER move evidence before documentation
-- Maintain continuous security of scene
-- Document ALL personnel who enter scene
-- Consider contamination prevention throughout
+**Officer, remember: NEVER move evidence before documentation. Maintain continuous scene security.**
             """
         
         elif "evidence" in query_lower:
             return """**EVIDENCE HANDLING PROTOCOL**
 
 **COLLECTION STANDARDS**
-- Use appropriate tools for each evidence type
-- Avoid contamination through proper PPE
-- Document exact location with coordinates/measurements
-- Photograph evidence in situ before collection
-- Use clean packaging for each item
+• Use appropriate tools for each evidence type
+• Avoid contamination through proper PPE
+• Document exact location with measurements
+• Photograph evidence in original position
+• Use clean packaging for each item
 
 **LABELING REQUIREMENTS**
-- Case number
-- Item number
-- Date and time of collection
-- Location found
-- Collecting officer name and badge
-- Brief description
+• Case number and item number
+• Date, time, and location found
+• Collecting officer name and badge
+• Brief description
 
 **CHAIN OF CUSTODY**
-- Document every person who handles evidence
-- Note time, date, purpose of each transfer
-- Use sealed evidence bags with tamper-evident tape
-- Store in appropriate conditions (temperature, humidity)
-- Maintain access log to evidence storage
+• Document every person handling evidence
+• Note time, date, purpose of each transfer
+• Use sealed bags with tamper-evident tape
+• Maintain proper storage conditions
+• Keep detailed access logs
 
-**DOCUMENTATION**
-- Evidence log with complete descriptions
-- Photographs of evidence as collected
-- Chain of custody forms
-- Storage location records
+**Officer, proper evidence handling can make or break your case in court.**
             """
         
         else:
             return """**GENERAL INVESTIGATION PROTOCOLS**
 
 **CASE INITIATION**
-1. Complaint/report received
-2. Initial assessment of allegations
-3. Case file creation
-4. Resource allocation
-5. Investigation plan development
+• Complaint/report received and assessed
+• Case file creation with unique identifier
+• Resource allocation and team assignment
+• Investigation plan development
 
 **INVESTIGATION PROCESS**
-1. Evidence collection and preservation
-2. Witness interviews
-3. Suspect identification and questioning
-4. Expert consultations
-5. Case file compilation
+• Evidence collection and preservation
+• Witness interviews and statements
+• Suspect identification and questioning
+• Expert consultations as needed
+• Comprehensive case file compilation
 
 **CASE COMPLETION**
-1. Evidence review and analysis
-2. Consultation with prosecutors
-3. Charge recommendation
-4. Court file preparation
-5. Case closure documentation
+• Evidence review and analysis
+• Prosecutor consultation
+• Charge recommendations
+• Court file preparation
+• Proper case closure documentation
 
-**For specific protocols, consult the Police Operations Manual or contact your supervisor.**
+**Officer, for specific protocols consult the Operations Manual or contact your supervisor.**
             """
 
     def create_professional_crime_map(self):
@@ -1412,7 +1404,7 @@ def main():
                     crime_map = bot.create_professional_crime_map()
                     folium_static(crime_map, width=800, height=400)
                     
-                    response = "**CRIME HOTSPOT MAP DISPLAYED ABOVE**\n\nThe interactive crime intelligence map shows:\n- Current crime hotspots with risk levels\n- Police station locations\n- Crime incident data by area\n- Multiple view layers (satellite, street, terrain)\n\nUse the map controls to zoom and switch between different views for tactical planning."
+                    response = "**CRIME HOTSPOT MAP DISPLAYED ABOVE**\n\nThe tactical intelligence map shows:\n• Current crime hotspots with risk assessment\n• Police station locations and coverage areas\n• Crime incident data by geographic area\n• Multiple view layers for operational planning\n\n**Officer, use map controls to zoom and switch views for tactical analysis.**"
                     
                 except Exception as e:
                     response = f"**MAP ERROR**: Unable to display crime map. Error: {str(e)}\n\nPlease try again or contact system administrator."
