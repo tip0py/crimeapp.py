@@ -675,7 +675,7 @@ class GeminiAPI:
                     temperature=0.3,  # Lower temperature for more professional responses
                     top_k=40,
                     top_p=0.95,
-                    max_output_tokens=25,  # Decreased for concise responses
+                    max_output_tokens=100,  # Decreased for concise responses
                 )
             )
            
