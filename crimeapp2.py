@@ -276,11 +276,10 @@ def main():
     """, unsafe_allow_html=True)
 
     # Check for crime board image
-    image_files = "crime_board_image.jpg"
-    for img_file in image_files:
-        if os.path.exists(img_file):
-            st.image(img_file, use_column_width=True)
-            break
+img_file = "crime_board_image.jpg"
+if os.path.exists(img_file):
+    st.image(img_file, use_column_width=True)
+break
 
     # Authentication section
     if not st.session_state.authenticated:
