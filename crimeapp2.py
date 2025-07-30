@@ -10,6 +10,9 @@ import hashlib
 import time
 import os
 import google.generativeai as genai
+import io
+import base64
+from PIL import Image
 
 # Configure Google AI
 GOOGLE_API_KEY = "AIzaSyBlAiRqnNHmm-Hfu8dCAx6dlVMROQ-c180"
@@ -22,10 +25,11 @@ st.set_page_config(
     page_title="SECURO - Crime Mitigation AI Chat Bot",
     layout="wide",
     initial_sidebar_state="collapsed",
+    page_icon="🤖",
     menu_items=None
 )
 
-# Updated CSS with enhanced magnifying glass animation
+# Enhanced CSS with both login image and chatbot styling
 st.markdown("""
 <style>
     /* Black theme with Times New Roman font */
@@ -36,27 +40,31 @@ st.markdown("""
         padding-top: 2rem !important;
     }
 
-    /* Login page with your crime scene background */
-    .login-page {
-        background-image: url('data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAfACgDASIAAhEBAxEB/8QAGQAAAwEBAQAAAAAAAAAAAAAABAUGAwIB/8QALBAAAQMDAwMEAQQDAAAAAAAAAQIDEQAEBSExEkFhBhMicYGRoTKx0fAjQsH/xAAYAQADAQEAAAAAAAAAAAAAAAACAwQBBf/EAB4RAAIDAQACAwAAAAAAAAAAAAABAgMREiExE0FR/9oADAMBAAIRAxEAPwCmxeKt7VCG2kBKEiABsK1VQeyMslplCVd6/aVoBb0uoACkkEJSEA+4NdeKbm2s8qpt12kOJbSAr9JeKtT5gCmsagtCj9isqy6ky99bKU6lUhKdVEmJ8A7V1jfYlbSUiGgYgVhLPG4yMoTcpcbeXAPyEyKjEzf5+3YSnwtTwPyJVxo+lGzjIzF31PuIQlWqfaSr8EpOkgfGRnYuGTkmXJDrbTqVEKyOjF1K0goBIAGWXL1LCzQW+q4wvEcVhJ7q/EGdUq5Jqwx/t5SzQ8ggKOqTP9Kqf9k=') !important;
-        background-size: cover !important;
-        background-position: center !important;
-        background-repeat: no-repeat !important;
-        background-attachment: fixed !important;
-        min-height: 100vh !important;
-        position: relative !important;
+    /* Chart container styling */
+    .chart-container {
+        background-color: #1a1a1a !important;
+        border: 2px solid #333333 !important;
+        border-radius: 15px !important;
+        padding: 20px !important;
+        margin: 20px 0 !important;
+        box-shadow: 0 8px 32px rgba(255, 255, 0, 0.1) !important;
     }
 
-    /* Dark overlay for login page */
-    .login-page::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.7) !important;
-        z-index: 1 !important;
+    /* Professional chart title */
+    .chart-title {
+        color: #FFFF00 !important;
+        font-size: 1.5rem !important;
+        font-weight: bold !important;
+        text-align: center !important;
+        margin-bottom: 15px !important;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8) !important;
+    }
+
+    /* Login page styling */
+    .login-page {
+        background-color: #000000 !important;
+        min-height: 100vh !important;
+        position: relative !important;
     }
 
     /* Ensure login content appears above overlay */
@@ -274,6 +282,14 @@ st.markdown("""
         letter-spacing: 3px !important;
     }
 
+    /* Main header styling for login */
+    .main-header {
+        text-align: center;
+        color: #2E86AB;
+        font-size: 2.5rem;
+        margin-bottom: 2rem;
+    }
+
     /* Crime scene tape effect */
     .crime-tape {
         background: repeating-linear-gradient(
@@ -299,14 +315,14 @@ st.markdown("""
 
     /* Enhanced magnifying glass celebration animation */
     @keyframes magnifySearch {
-        0% { 
+        0% {
             transform: translateY(100vh) scale(0.5) rotate(0deg);
             opacity: 0;
         }
         20% {
             opacity: 1;
         }
-        50% { 
+        50% {
             transform: translateY(30vh) scale(1.2) rotate(180deg);
             opacity: 1;
         }
@@ -314,7 +330,7 @@ st.markdown("""
             transform: translateY(-10vh) scale(0.8) rotate(360deg);
             opacity: 0.8;
         }
-        100% { 
+        100% {
             transform: translateY(-20vh) scale(0.3) rotate(540deg);
             opacity: 0;
         }
@@ -347,7 +363,214 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+class SecuroCrimeCharts:
+    """Enhanced crime chart generation for SECURO criminology chatbot"""
+   
+    def __init__(self):
+        # Professional color scheme for law enforcement
+        self.colors = {
+            'violent': '#E63946',      # Red for violent crimes
+            'property': '#F1A208',     # Orange for property crimes  
+            'drug': '#457B9D',         # Blue for drug offenses
+            'white_collar': '#2A9D8F', # Teal for white collar
+            'cyber': '#6F2DA8',        # Purple for cybercrimes
+            'traffic': '#BDBDBD',      # Gray for traffic violations
+            'other': '#95A5A6'         # Light gray for other
+        }
+
+    def generate_crime_distribution_chart(self, crime_data, year="2024", chart_type="pie"):
+        """Generate professional crime distribution chart for law enforcement"""
+        if year not in crime_data:
+            return None, f"Crime statistics for {year} are not available."
+           
+        data = crime_data[year]["by_category"]
+        labels = list(data.keys())
+        values = list(data.values())
+       
+        # Create figure with professional styling
+        plt.style.use('dark_background')
+        fig, ax = plt.subplots(figsize=(12, 8))
+        fig.patch.set_facecolor('black')
+       
+        if chart_type == "pie":
+            # Professional pie chart
+            colors = [self.colors.get(label.lower().replace(' ', '_').replace('crimes', ''), '#95A5A6')
+                     for label in labels]
+           
+            wedges, texts, autotexts = ax.pie(
+                values,
+                labels=labels,
+                autopct='%1.1f%%',
+                startangle=90,
+                colors=colors,
+                explode=[0.05] * len(labels),  # Slight separation
+                shadow=True,
+                textprops={'color': 'white', 'fontsize': 11, 'weight': 'bold'}
+            )
+           
+            # Enhance text readability
+            for autotext in autotexts:
+                autotext.set_color('black')
+                autotext.set_weight('bold')
+                autotext.set_fontsize(10)
+               
+            ax.set_title(f'Crime Distribution Analysis - {year}\nSt. Kitts & Nevis',
+                        color='white', fontsize=16, pad=20, weight='bold')
+                       
+        elif chart_type == "bar":
+            # Professional bar chart
+            colors = [self.colors.get(label.lower().replace(' ', '_').replace('crimes', ''), '#95A5A6')
+                     for label in labels]
+           
+            bars = ax.bar(labels, values, color=colors, alpha=0.8, edgecolor='white', linewidth=1)
+           
+            # Add value labels on bars
+            for bar in bars:
+                height = bar.get_height()
+                ax.text(bar.get_x() + bar.get_width()/2., height + 5,
+                       f'{int(height)}', ha='center', va='bottom',
+                       color='white', fontweight='bold', fontsize=10)
+           
+            ax.set_title(f'Crime Statistics Breakdown - {year}\nSt. Kitts & Nevis',
+                        color='white', fontsize=16, pad=20, weight='bold')
+            ax.set_ylabel('Number of Reported Cases', color='white', fontsize=12)
+            ax.tick_params(colors='white', rotation=45)
+           
+            # Style the axes
+            for spine in ax.spines.values():
+                spine.set_color('white')
+       
+        ax.set_facecolor('black')
+       
+        # Add professional footer with timestamp
+        fig.text(0.5, 0.02, f'SECURO Intelligence System | Generated: {datetime.datetime.now().strftime("%Y-%m-%d %H:%M")} | CONFIDENTIAL',
+                ha='center', va='bottom', color='yellow', fontsize=8, weight='bold')
+       
+        plt.tight_layout()
+        plt.subplots_adjust(bottom=0.1)
+       
+        return fig, f"**CRIME STATISTICS FOR {year}**\n\nTotal Reported Crimes: {crime_data[year]['total_reported']}\nChart generated showing distribution and breakdown by category."
+
+    def generate_trend_analysis(self, crime_data, years=["2022", "2023", "2024"]):
+        """Generate multi-year trend analysis chart"""
+        plt.style.use('dark_background')
+        fig, ax = plt.subplots(figsize=(14, 8))
+        fig.patch.set_facecolor('black')
+       
+        # Get common crime types across all years
+        common_types = ["Violent Crimes", "Property Crimes", "Drug Offenses", "Cybercrimes"]
+        available_years = [year for year in years if year in crime_data]
+       
+        if not available_years:
+            return None, "No data available for the requested years."
+       
+        x = range(len(available_years))
+        width = 0.2
+       
+        for i, crime_type in enumerate(common_types):
+            values = []
+            for year in available_years:
+                if crime_type in crime_data[year]["by_category"]:
+                    values.append(crime_data[year]["by_category"][crime_type])
+                else:
+                    values.append(0)
+           
+            color = list(self.colors.values())[i]
+            ax.bar([pos + width * i for pos in x], values, width,
+                  label=f'{crime_type}', color=color, alpha=0.8)
+       
+        ax.set_xlabel('Year', color='white', fontsize=12)
+        ax.set_ylabel('Number of Cases', color='white', fontsize=12)
+        ax.set_title('Crime Trend Analysis - Multi-Year Comparison\nSt. Kitts & Nevis',
+                    color='white', fontsize=16, pad=20, weight='bold')
+        ax.set_xticks([pos + width * 1.5 for pos in x])
+        ax.set_xticklabels(available_years)
+        ax.legend(facecolor='black', edgecolor='white', labelcolor='white')
+       
+        # Style the chart
+        ax.set_facecolor('black')
+        ax.tick_params(colors='white')
+        for spine in ax.spines.values():
+            spine.set_color('white')
+       
+        # Professional footer
+        fig.text(0.5, 0.02, f'SECURO Intelligence System | Trend Analysis | Generated: {datetime.datetime.now().strftime("%Y-%m-%d %H:%M")} | CONFIDENTIAL',
+                ha='center', va='bottom', color='yellow', fontsize=8, weight='bold')
+       
+        plt.tight_layout()
+        plt.subplots_adjust(bottom=0.1)
+       
+        return fig, f"**TREND ANALYSIS COMPLETE**\n\nMulti-year comparison for {', '.join(available_years)} showing trends across major crime categories."
+
+    def generate_hotspot_chart(self, location_data=None):
+        """Generate crime hotspot analysis chart"""
+        if location_data is None:
+            # Sample hotspot data
+            location_data = {
+                "Basseterre Central": 450,
+                "Charlestown": 200,
+                "Frigate Bay": 180,
+                "Sandy Point": 120,
+                "Dieppe Bay": 90
+            }
+       
+        plt.style.use('dark_background')
+        fig, ax = plt.subplots(figsize=(12, 8))
+        fig.patch.set_facecolor('black')
+       
+        locations = list(location_data.keys())
+        crimes = list(location_data.values())
+       
+        # Color code by crime level
+        colors = []
+        for crime_count in crimes:
+            if crime_count >= 400:
+                colors.append('#E63946')  # High risk - Red
+            elif crime_count >= 200:
+                colors.append('#F1A208')  # Medium risk - Orange
+            else:
+                colors.append('#2A9D8F')  # Low risk - Green
+       
+        bars = ax.barh(locations, crimes, color=colors, alpha=0.8, edgecolor='white')
+       
+        # Add value labels
+        for i, bar in enumerate(bars):
+            width = bar.get_width()
+            risk_level = "HIGH" if crimes[i] >= 400 else "MEDIUM" if crimes[i] >= 200 else "LOW"
+            ax.text(width + 10, bar.get_y() + bar.get_height()/2,
+                   f'{crimes[i]} ({risk_level})', ha='left', va='center',
+                   color='white', fontweight='bold')
+       
+        ax.set_xlabel('Number of Incidents', color='white', fontsize=12)
+        ax.set_title('Crime Hotspot Analysis - Geographic Distribution\nSt. Kitts & Nevis',
+                    color='white', fontsize=16, pad=20, weight='bold')
+       
+        # Style the chart
+        ax.set_facecolor('black')
+        ax.tick_params(colors='white')
+        for spine in ax.spines.values():
+            spine.set_color('white')
+       
+        # Add legend
+        legend_elements = [
+            plt.Rectangle((0,0),1,1, facecolor='#E63946', label='High Risk (400+)'),
+            plt.Rectangle((0,0),1,1, facecolor='#F1A208', label='Medium Risk (200-399)'),
+            plt.Rectangle((0,0),1,1, facecolor='#2A9D8F', label='Low Risk (<200)')
+        ]
+        ax.legend(handles=legend_elements, loc='lower right', facecolor='black',
+                 edgecolor='white', labelcolor='white')
+       
+        # Professional footer
+        fig.text(0.5, 0.02, f'SECURO Intelligence System | Hotspot Analysis | Generated: {datetime.datetime.now().strftime("%Y-%m-%d %H:%M")} | CONFIDENTIAL',
+                ha='center', va='bottom', color='yellow', fontsize=8, weight='bold')
+       
+        plt.tight_layout()
+        plt.subplots_adjust(bottom=0.15)
+       
+        return fig, "**HOTSPOT ANALYSIS COMPLETE**\n\nGeographic crime distribution analysis showing risk levels by location."
+
 class UserAuthentication:
+    """Enhanced authentication system combining both login styles"""
     def __init__(self):
         if "users_db" not in st.session_state:
             st.session_state.users_db = {}
@@ -386,6 +609,23 @@ class UserAuthentication:
         return levels.get(role, 1)
    
     def login(self, username, password):
+        """Enhanced login with demo credentials support"""
+        # Check demo credentials first
+        demo_users = {
+            "admin": "password",
+            "demo": "demo123",
+        }
+       
+        if username in demo_users and demo_users[username] == password:
+            st.session_state.logged_in = True
+            st.session_state.current_user = username
+            st.session_state.user_role = "Demo User" if username == "demo" else "Administrator"
+            st.session_state.access_level = 5 if username == "admin" else 3
+            st.session_state.badge_number = "DEMO-001" if username == "demo" else "ADMIN-001"
+            st.session_state.department = "Demo Department"
+            return True, "Demo access granted"
+       
+        # Check registered users
         if username not in st.session_state.users_db:
             return False, "Professional credentials not found"
        
@@ -418,19 +658,20 @@ class GeminiAPI:
                     max_output_tokens=2048,  # Increased for detailed responses
                 )
             )
-            
+           
             if response.text:
                 return response.text
             else:
                 return "I apologize, but I couldn't generate a response. Please rephrase your professional inquiry."
-                
+               
         except Exception as e:
             return f"Connection Error - Unable to process request: {str(e)}"
 
 class CriminologyProfessionalBot:
     def __init__(self):
         self.gemini_api = GeminiAPI()
-        
+        self.charts = SecuroCrimeCharts()  # Initialize chart generator
+       
         # Professional contact directory for St. Kitts & Nevis
         self.professional_contacts = {
             "police_hq": {
@@ -541,7 +782,7 @@ class CriminologyProfessionalBot:
 **Case Number:** [Auto-generated]
 **Date/Time:** {datetime}
 **Reporting Officer:** {officer}
-**Location:** 
+**Location:**
 
 **INCIDENT DETAILS:**
 - Type of Offense:
@@ -565,7 +806,7 @@ class CriminologyProfessionalBot:
 **Officer Signature:** ________________
 **Supervisor Review:** ________________
             """,
-            
+           
             "case_analysis": """
 **CASE ANALYSIS FRAMEWORK**
 
@@ -638,7 +879,7 @@ class CriminologyProfessionalBot:
 
     def create_professional_prompt(self, user_input, user_role, access_level):
         """Create specialized prompt based on user role and access level"""
-        
+       
         base_context = f"""
 You are SECURO, an elite AI criminology specialist with 15+ years of experience in Caribbean law enforcement. You're a seasoned detective who rose through the ranks in St. Kitts and Nevis, known for your sharp analytical mind, unwavering dedication to justice, and ability to explain complex legal matters clearly.
 
@@ -689,7 +930,7 @@ You are SECURO, an elite AI criminology specialist with 15+ years of experience 
 
 Respond as the experienced SECURO detective you are - professional, concise, and focused on helping this officer get results. Address them as "Officer" and provide clear, actionable guidance.
         """
-        
+       
         return base_context
 
     def get_case_template(self, template_type):
@@ -708,9 +949,9 @@ Respond as the experienced SECURO detective you are - professional, concise, and
     def get_legal_reference(self, query):
         """Provide legal references based on query"""
         query_lower = query.lower()
-        
+       
         legal_response = "**LEGAL REFERENCE - ST. KITTS & NEVIS**\n\n"
-        
+       
         if any(word in query_lower for word in ["homicide", "murder", "killing"]):
             legal_response += """**HOMICIDE OFFENSES (Criminal Code Sections 87-102)**
 
@@ -727,7 +968,7 @@ Respond as the experienced SECURO detective you are - professional, concise, and
 
 **Next Step:** Secure scene and contact forensic pathologist immediately.
             """
-        
+       
         elif any(word in query_lower for word in ["theft", "stealing", "larceny"]):
             legal_response += """**THEFT OFFENSES (Criminal Code Sections 201-250)**
 
@@ -744,7 +985,7 @@ Respond as the experienced SECURO detective you are - professional, concise, and
 
 **Next Step:** Document value and secure witness statements.
             """
-        
+       
         elif any(word in query_lower for word in ["assault", "battery", "violence"]):
             legal_response += """**ASSAULT OFFENSES (Criminal Code Sections 56-74)**
 
@@ -760,7 +1001,7 @@ Respond as the experienced SECURO detective you are - professional, concise, and
 
 **Next Step:** Arrange medical examination and photograph injuries.
             """
-        
+       
         else:
             legal_response += """**GENERAL LEGAL RESOURCES**
 
@@ -776,49 +1017,17 @@ Respond as the experienced SECURO detective you are - professional, concise, and
 
 **Officer, for specific legal interpretations, consult DPP Office directly.**
             """
-        
+       
         return legal_response
 
-    def create_crime_statistics_chart(self, year):
-        """Create crime statistics chart for a specific year"""
-        if year not in self.crime_statistics:
-            return None, f"Crime statistics for {year} are not available. Available years: {', '.join(self.crime_statistics.keys())}"
-        
-        data = self.crime_statistics[year]
-        
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 8))
-        fig.patch.set_facecolor('black')
-        
-        # Pie chart
-        categories = list(data["by_category"].keys())
-        values = list(data["by_category"].values())
-        colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FECA57', '#FF9FF3'][:len(categories)]
-        
-        ax1.pie(values, labels=categories, autopct='%1.1f%%', colors=colors, startangle=90,
-               textprops={'color': 'white', 'fontsize': 11})
-        ax1.set_title(f'Crime Distribution {year}', color='white', fontsize=16, pad=20)
-        ax1.set_facecolor('black')
-        
-        # Bar chart
-        bars = ax2.bar(categories, values, color=colors, alpha=0.8)
-        ax2.set_title(f'Crime Statistics {year}', color='white', fontsize=16, pad=20)
-        ax2.set_ylabel('Number of Cases', color='white')
-        ax2.set_facecolor('black')
-        ax2.tick_params(colors='white', rotation=45)
-        
-        # Add value labels on bars
-        for bar in bars:
-            height = bar.get_height()
-            ax2.text(bar.get_x() + bar.get_width()/2., height + 5,
-                    f'{int(height)}', ha='center', va='bottom', color='white', fontweight='bold')
-        
-        for spine in ax2.spines.values():
-            spine.set_color('white')
-        
-        plt.xticks(rotation=45, ha='right')
-        plt.tight_layout()
-        
-        return fig, f"**CRIME STATISTICS FOR {year}**\n\nTotal Reported Crimes: {data['total_reported']}\nChart generated showing distribution and breakdown by category."
+    def display_chart_with_container(self, fig, title, description):
+        """Display chart with professional container styling"""
+        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+        st.markdown(f'<div class="chart-title">{title}</div>', unsafe_allow_html=True)
+        st.pyplot(fig)
+        st.markdown(f"<p style='color: #ffffff; text-align: center; margin-top: 10px;'>{description}</p>", unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+        plt.close(fig)  # Clean up memory
 
     def process_professional_query(self, user_input):
         """Process queries with professional criminology focus"""
@@ -834,28 +1043,81 @@ I'm your AI criminology specialist - think of me as your experienced detective p
 
 **Quick Access:**
 • Crime mapping: "show crime map"  
-• Statistics: "statistics 2024"  
+• Statistics: "statistics 2024" or "show chart"
+• Trend analysis: "trend analysis" or "compare years"
+• Hotspot analysis: "hotspots" or "crime hotspots"
 • Templates: "incident report" or "case analysis"  
 • Legal help: Ask about any criminal code section  
 
 **Ready to assist with your case work. What's the situation, Officer?**
             """
 
+        # Handle chart requests - Enhanced chart detection
+        elif any(word in user_input_lower for word in ["chart", "graph", "visual", "statistics", "data", "pie", "bar"]):
+            import re
+            year_match = re.search(r'\b(20\d{2})\b', user_input)
+            year = year_match.group(1) if year_match else "2024"
+           
+            if any(word in user_input_lower for word in ["trend", "comparison", "compare", "years"]):
+                # Generate trend analysis
+                fig, response = self.charts.generate_trend_analysis(self.crime_statistics)
+                if fig:
+                    self.display_chart_with_container(
+                        fig,
+                        "🔍 CRIME TREND ANALYSIS",
+                        "Multi-year comparison showing crime trends across major categories"
+                    )
+                return response
+           
+            elif any(word in user_input_lower for word in ["hotspot", "location", "geographic", "area"]):
+                # Generate hotspot analysis
+                fig, response = self.charts.generate_hotspot_chart()
+                if fig:
+                    self.display_chart_with_container(
+                        fig,
+                        "🎯 CRIME HOTSPOT ANALYSIS",
+                        "Geographic distribution showing high-risk areas and incident counts"
+                    )
+                return response
+           
+            elif any(word in user_input_lower for word in ["bar", "column"]):
+                # Generate bar chart
+                fig, response = self.charts.generate_crime_distribution_chart(self.crime_statistics, year, "bar")
+                if fig:
+                    self.display_chart_with_container(
+                        fig,
+                        f"📊 CRIME STATISTICS {year} - BAR CHART",
+                        f"Detailed breakdown of reported crimes by category for {year}"
+                    )
+                return response
+           
+            else:
+                # Default to pie chart
+                fig, response = self.charts.generate_crime_distribution_chart(self.crime_statistics, year, "pie")
+                if fig:
+                    self.display_chart_with_container(
+                        fig,
+                        f"📈 CRIME DISTRIBUTION {year} - PIE CHART",
+                        f"Proportional analysis of crime categories for {year}"
+                    )
+                return response
+
         # Handle crime map requests
         elif any(word in user_input_lower for word in ["map", "hotspot", "crime map", "mapping", "location"]):
             return "crime_map_requested"
 
-        # Handle statistics requests with year detection
-        elif any(word in user_input_lower for word in ["statistics", "data", "trends", "numbers", "crimes"]):
-            # Look for year in the query
+        # Handle statistics requests without charts
+        elif any(word in user_input_lower for word in ["numbers", "crimes"]) and not any(word in user_input_lower for word in ["chart", "graph", "visual"]):
             import re
             year_match = re.search(r'\b(20\d{2})\b', user_input)
             if year_match:
                 year = year_match.group(1)
-                fig, response = self.create_crime_statistics_chart(year)
-                if fig:
-                    st.pyplot(fig)
-                return response
+                if year in self.crime_statistics:
+                    data = self.crime_statistics[year]
+                    breakdown = "\n".join([f"• {category}: {count}" for category, count in data["by_category"].items()])
+                    return f"**CRIME STATISTICS FOR {year}**\n\n**Total Reported Crimes:** {data['total_reported']}\n\n**Breakdown by Category:**\n{breakdown}\n\n**Officer, use 'show chart {year}' for visual analysis.**"
+                else:
+                    return f"**Officer, statistics for {year} are not available.** Available years: 2022, 2023, 2024"
             else:
                 return "**Officer, please specify a year for crime statistics (e.g., 'Show me crime statistics for 2024').**\n\n**Available years:** 2022, 2023, 2024"
 
@@ -865,16 +1127,16 @@ I'm your AI criminology specialist - think of me as your experienced detective p
                 return f"**INCIDENT REPORT TEMPLATE READY**\n\n{self.get_case_template('incident_report')}\n\n**Officer, template is ready for your case documentation.**"
             elif "analysis" in user_input_lower or "case" in user_input_lower:
                 return f"**CASE ANALYSIS FRAMEWORK READY**\n\n{self.get_case_template('case_analysis')}\n\n**Officer, use this framework to structure your case analysis.**"
-        
+       
         elif any(word in user_input_lower for word in ["legal", "law", "statute", "criminal code"]):
             return self.get_legal_reference(user_input)
-        
+       
         elif any(word in user_input_lower for word in ["contact", "phone", "directory", "reach"]):
             return self.get_professional_directory()
-        
+       
         elif any(word in user_input_lower for word in ["protocol", "procedure", "how to", "steps"]):
             return self.get_investigation_protocol(user_input)
-        
+       
         # Use Gemini AI for complex queries
         else:
             enhanced_prompt = self.create_professional_prompt(user_input, user_role, access_level)
@@ -909,7 +1171,7 @@ I'm your AI criminology specialist - think of me as your experienced detective p
     def get_investigation_protocol(self, query):
         """Return relevant investigation protocols"""
         query_lower = query.lower()
-        
+       
         if "crime scene" in query_lower:
             return """**CRIME SCENE INVESTIGATION PROTOCOL**
 
@@ -934,7 +1196,7 @@ I'm your AI criminology specialist - think of me as your experienced detective p
 
 **Officer, remember: NEVER move evidence before documentation. Maintain continuous scene security.**
             """
-        
+       
         elif "evidence" in query_lower:
             return """**EVIDENCE HANDLING PROTOCOL**
 
@@ -960,7 +1222,7 @@ I'm your AI criminology specialist - think of me as your experienced detective p
 
 **Officer, proper evidence handling can make or break your case in court.**
             """
-        
+       
         else:
             return """**GENERAL INVESTIGATION PROTOCOLS**
 
@@ -991,14 +1253,14 @@ I'm your AI criminology specialist - think of me as your experienced detective p
         """Create detailed crime mapping for law enforcement"""
         # St. Kitts and Nevis coordinates
         st_kitts_center = [17.3578, -62.7822]
-        
+       
         # Create professional map
         m = folium.Map(
             location=st_kitts_center,
             zoom_start=11,
             tiles=None
         )
-        
+       
         # Add multiple tile layers for operational use
         folium.TileLayer(
             tiles='https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',
@@ -1007,7 +1269,7 @@ I'm your AI criminology specialist - think of me as your experienced detective p
             overlay=False,
             control=True
         ).add_to(m)
-        
+       
         folium.TileLayer(
             tiles='https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',
             attr='Google Maps',
@@ -1015,21 +1277,21 @@ I'm your AI criminology specialist - think of me as your experienced detective p
             overlay=False,
             control=True
         ).add_to(m)
-        
+       
         folium.TileLayer(
             tiles='OpenStreetMap',
             name='OpenStreetMap',
             overlay=False,
             control=True
         ).add_to(m)
-        
+       
         # Police stations and key facilities
         police_stations = [
             {"name": "Police HQ", "coords": [17.2948, -62.7234], "type": "headquarters"},
             {"name": "Charlestown Station", "coords": [17.1372, -62.6219], "type": "station"},
             {"name": "Sandy Point Station", "coords": [17.3547, -62.8119], "type": "station"}
         ]
-        
+       
         for station in police_stations:
             icon_color = 'blue' if station['type'] == 'headquarters' else 'green'
             folium.Marker(
@@ -1037,10 +1299,10 @@ I'm your AI criminology specialist - think of me as your experienced detective p
                 popup=f"<b>{station['name']}</b><br>Type: {station['type'].title()}",
                 icon=folium.Icon(color=icon_color, icon='shield', prefix='fa')
             ).add_to(m)
-        
+       
         # Crime hotspots with detailed data
         hotspots = [
-            {"name": "Basseterre Central", "coords": [17.2948, -62.7234], "crimes": 450, 
+            {"name": "Basseterre Central", "coords": [17.2948, -62.7234], "crimes": 450,
              "types": "Property: 180, Violent: 89, Drug: 125, Other: 56", "risk": "High"},
             {"name": "Frigate Bay Area", "coords": [17.2619, -62.6853], "crimes": 180,
              "types": "Property: 95, Violent: 34, Drug: 28, Other: 23", "risk": "Medium"},
@@ -1051,7 +1313,7 @@ I'm your AI criminology specialist - think of me as your experienced detective p
             {"name": "Dieppe Bay", "coords": [17.4075, -62.8097], "crimes": 90,
              "types": "Property: 45, Violent: 18, Drug: 15, Other: 12", "risk": "Low"}
         ]
-        
+       
         for spot in hotspots:
             color = 'red' if spot['risk'] == 'High' else 'orange' if spot['risk'] == 'Medium' else 'green'
             folium.CircleMarker(
@@ -1068,10 +1330,10 @@ I'm your AI criminology specialist - think of me as your experienced detective p
                 fillOpacity=0.7,
                 weight=2
             ).add_to(m)
-        
+       
         # Add layer control
         folium.LayerControl().add_to(m)
-        
+       
         return m
 
 
@@ -1120,18 +1382,58 @@ def init_session_state():
     if "auth" not in st.session_state:
         st.session_state.auth = UserAuthentication()
 
+def load_login_image():
+    """Load and display the login image with multiple fallback options"""
+    try:
+        # Check multiple possible locations for the image
+        image_paths = ["securo.jpeg", "images/securo.jpeg", "assets/securo.jpeg", "./securo.jpeg"]
+        image_loaded = False
+
+        for path in image_paths:
+            if os.path.exists(path):
+                image = Image.open(path)
+                # Center the image and make it responsive
+                col1, col2, col3 = st.columns([1, 2, 1])
+                with col2:
+                    st.image(image, use_column_width=True)
+                image_loaded = True
+                break
+
+        if not image_loaded:
+            st.warning("⚠️ Logo image not found. Please ensure 'securo.jpeg' is in the correct directory.")
+            # Display a placeholder with enhanced styling
+            st.markdown("""
+            <div style="text-align: center; padding: 40px; background: linear-gradient(45deg, #1a1a1a, #333); border-radius: 15px; margin: 20px 0;">
+                <h2 style="color: #FFFF00; font-size: 3rem; margin: 0;">🛡️ SECURO</h2>
+                <p style="color: #ffffff; margin: 10px 0;">Professional Crime Investigation System</p>
+            </div>
+            """, unsafe_allow_html=True)
+
+    except Exception as e:
+        st.error(f"Error loading image: {str(e)}")
+        # Display fallback logo
+        st.markdown("""
+        <div style="text-align: center; padding: 40px; background: linear-gradient(45deg, #1a1a1a, #333); border-radius: 15px; margin: 20px 0;">
+            <h2 style="color: #FFFF00; font-size: 3rem; margin: 0;">🛡️ SECURO</h2>
+            <p style="color: #ffffff; margin: 10px 0;">Professional Crime Investigation System</p>
+        </div>
+        """, unsafe_allow_html=True)
+
 def show_professional_login():
-    """Display professional login/registration page with crime scene background"""
-    
+    """Display professional login/registration page with enhanced styling and image"""
+   
     # Add login page class to body
     st.markdown('<div class="login-page">', unsafe_allow_html=True)
     st.markdown('<div class="login-content">', unsafe_allow_html=True)
-    
+   
+    # Load and display the image
+    load_login_image()
+   
     # SECURO Title with crime tape
-    st.markdown('<h1 class="securo-title">SECURO</h1>', unsafe_allow_html=True)
+    st.markdown('<h1 class="main-header">Welcome to Securo AI Chatbot</h1>', unsafe_allow_html=True)
     st.markdown('<div class="crime-tape"></div>', unsafe_allow_html=True)
     st.markdown("<p class='subtitle'>CRIME MITIGATION AI CHAT BOT<br>Professional Access for St. Kitts & Nevis Law Enforcement</p>", unsafe_allow_html=True)
-    
+   
     # Security notice with enhanced styling
     st.markdown("""
     <div style="background: rgba(139, 0, 0, 0.8); padding: 15px; border-radius: 10px; border: 2px solid #FF0000; margin: 20px 0; text-align: center;">
@@ -1139,52 +1441,56 @@ def show_professional_login():
         <p style="color: #ffffff; margin: 5px 0;">Authorized Personnel Only - Law Enforcement & Criminal Justice Professionals</p>
     </div>
     """, unsafe_allow_html=True)
-    
+   
     # Login container
     st.markdown('<div class="login-container">', unsafe_allow_html=True)
-    
-    tab1, tab2 = st.tabs(["Professional Login", "Register Professional Account"])
-    
+   
+    tab1, tab2 = st.tabs(["🔐 Professional Login", "📝 Register Professional Account"])
+   
     with tab1:
         st.subheader("Access SECURO System")
+       
+        # Add demo credentials info
+        st.info("💡 Demo Credentials: Username: 'admin' | Password: 'password' OR Username: 'demo' | Password: 'demo123'")
+       
         username = st.text_input("Professional Username", key="login_username", placeholder="Enter your professional username")
         password = st.text_input("Secure Password", type="password", key="login_password", placeholder="Enter your secure password")
-        
-        if st.button("ACCESS SECURO SYSTEM", use_container_width=True, type="primary"):
+       
+        if st.button("🚀 ACCESS SECURO SYSTEM", use_container_width=True, type="primary"):
             if username and password:
                 success, message = st.session_state.auth.login(username, password)
                 if success:
-                    st.success(f"Access Granted: {message}")
+                    st.success(f"✅ Access Granted: {message}")
                     magnifying_glass_celebration()
                     time.sleep(3)
                     st.rerun()
                 else:
-                    st.error(f"Access Denied: {message}")
+                    st.error(f"❌ Access Denied: {message}")
             else:
                 st.error("Please enter your professional credentials")
-    
+   
     with tab2:
         st.subheader("Register Professional Account")
         st.warning("Professional verification required for account activation")
-        
+       
         new_username = st.text_input("Professional Username", key="new_username", placeholder="Choose a professional username")
         new_password = st.text_input("Secure Password (8+ characters)", type="password", key="new_password", placeholder="Create a strong password")
         confirm_password = st.text_input("Confirm Password", type="password", key="confirm_password", placeholder="Confirm your password")
-        
+       
         role = st.selectbox("Professional Role", [
             "Senior Criminologist",
-            "Detective", 
+            "Detective",
             "Police Officer",
             "Forensic Specialist",
             "Legal Advisor",
             "Researcher",
             "Student"
         ])
-        
+       
         badge_number = st.text_input("Badge/ID Number (if applicable)", placeholder="Enter badge or ID number")
         department = st.text_input("Department/Agency", placeholder="Enter your department or agency")
-        
-        if st.button("SUBMIT PROFESSIONAL REGISTRATION", use_container_width=True):
+       
+        if st.button("📋 SUBMIT PROFESSIONAL REGISTRATION", use_container_width=True):
             if new_username and new_password and confirm_password:
                 if new_password != confirm_password:
                     st.error("Passwords do not match")
@@ -1193,14 +1499,14 @@ def show_professional_login():
                         new_username, new_password, role, badge_number, department
                     )
                     if success:
-                        st.success(f"Registration Successful: {message}")
+                        st.success(f"✅ Registration Successful: {message}")
                         st.info("Your professional account has been created. You may now login to SECURO.")
                         magnifying_glass_celebration()
                     else:
-                        st.error(f"Registration Failed: {message}")
+                        st.error(f"❌ Registration Failed: {message}")
             else:
                 st.error("Please complete all required fields")
-    
+   
     st.markdown('</div>', unsafe_allow_html=True)  # Close login-container
     st.markdown('</div>', unsafe_allow_html=True)  # Close login-content
     st.markdown('</div>', unsafe_allow_html=True)  # Close login-page
@@ -1222,12 +1528,12 @@ def display_message(role, content):
 
 def main():
     init_session_state()
-    
+   
     # Check if user is logged in
     if not st.session_state.logged_in:
         show_professional_login()
         return
-    
+   
     # Professional header with credentials
     col1, col2, col3 = st.columns([1, 2, 1])
     with col1:
@@ -1236,13 +1542,13 @@ def main():
         if st.session_state.get('badge_number'):
             st.write(f"**Badge:** {st.session_state.badge_number}")
         st.write(f"**Access Level:** {st.session_state.access_level}/5")
-    
+   
     with col2:
         st.markdown('<h1 class="securo-title">SECURO</h1>', unsafe_allow_html=True)
         st.markdown("<p class='subtitle'>CRIME MITIGATION AI CHAT BOT<br>Professional Intelligence System</p>", unsafe_allow_html=True)
-    
+   
     with col3:
-        if st.button("Secure Logout", type="secondary"):
+        if st.button("🚪 Secure Logout", type="secondary"):
             # Clear all session data for security
             for key in ['logged_in', 'current_user', 'user_role', 'access_level', 'badge_number', 'department']:
                 if key in st.session_state:
@@ -1255,18 +1561,18 @@ def main():
     # Sidebar toggle functionality
     if "sidebar_open" not in st.session_state:
         st.session_state.sidebar_open = True
-    
+   
     # Sidebar toggle button in header
     with col1:
         if st.button("☰ Menu", key="sidebar_toggle"):
             st.session_state.sidebar_open = not st.session_state.sidebar_open
             st.rerun()
-    
+   
     # Show sidebar only if open
     if st.session_state.sidebar_open:
         with st.sidebar:
             st.header("🔐 Professional Tools")
-            
+           
             # System status - clean design
             st.markdown("""
             <div style="background: #1a4d1a; padding: 10px; border-radius: 8px; margin: 10px 0; text-align: center;">
@@ -1274,15 +1580,15 @@ def main():
                 <small>Officer: """ + st.session_state.user_role + """</small>
             </div>
             """, unsafe_allow_html=True)
-            
+           
             st.divider()
-            
+           
             # Emergency protocols - cleaner design
             st.subheader("🚨 Emergency Response")
-            
+           
             # Emergency buttons with clean design
             col_a, col_b = st.columns(2)
-            
+           
             with col_a:
                 if st.button("🚨\nPolice\nDispatch", use_container_width=True, help="Emergency: 911 | HQ: (869) 465-2241"):
                     st.markdown("""
@@ -1292,7 +1598,7 @@ def main():
                         <p><strong>HQ Direct:</strong> <a href="tel:+18694652241" style="color: #FFFF00;">(869) 465-2241</a></p>
                     </div>
                     """, unsafe_allow_html=True)
-            
+           
             with col_b:
                 if st.button("🏥\nMedical\nEmergency", use_container_width=True, help="Emergency: 911 | Hospital: (869) 465-2551"):
                     st.markdown("""
@@ -1302,7 +1608,7 @@ def main():
                         <p><strong>Hospital:</strong> <a href="tel:+18694652551" style="color: #FFFF00;">(869) 465-2551</a></p>
                     </div>
                     """, unsafe_allow_html=True)
-            
+           
             # Legal emergency
             if st.button("⚖️ Legal/Court Emergency", use_container_width=True):
                 st.markdown("""
@@ -1312,12 +1618,12 @@ def main():
                     <p><strong>Court Registry:</strong> <a href="tel:+18694652366" style="color: #FFFF00;">(869) 465-2366</a></p>
                 </div>
                 """, unsafe_allow_html=True)
-            
+           
             st.divider()
-            
+           
             # Professional resources
             st.subheader("📋 Case Management")
-            
+           
             if st.button("📋 Incident Report", use_container_width=True):
                 template = bot.get_case_template('incident_report')
                 st.session_state.messages.append({
@@ -1325,7 +1631,7 @@ def main():
                     "content": f"**INCIDENT REPORT TEMPLATE GENERATED**\n\n{template}"
                 })
                 st.rerun()
-            
+           
             if st.button("🔍 Case Analysis", use_container_width=True):
                 template = bot.get_case_template('case_analysis')
                 st.session_state.messages.append({
@@ -1333,7 +1639,7 @@ def main():
                     "content": f"**CASE ANALYSIS FRAMEWORK GENERATED**\n\n{template}"
                 })
                 st.rerun()
-            
+           
             if st.button("⚖️ Legal Reference", use_container_width=True):
                 legal_ref = bot.get_legal_reference("general")
                 st.session_state.messages.append({
@@ -1341,12 +1647,49 @@ def main():
                     "content": legal_ref
                 })
                 st.rerun()
-            
+           
             st.divider()
-            
+           
+            # Enhanced Chart Options
+            st.subheader("📊 Crime Analytics")
+           
+            chart_col1, chart_col2 = st.columns(2)
+           
+            with chart_col1:
+                if st.button("📈 Pie Chart", use_container_width=True, help="Show crime distribution as pie chart"):
+                    st.session_state.messages.append({
+                        "role": "user",
+                        "content": "show pie chart 2024"
+                    })
+                    st.rerun()
+               
+                if st.button("🔄 Trend Analysis", use_container_width=True, help="Show multi-year trends"):
+                    st.session_state.messages.append({
+                        "role": "user",
+                        "content": "show trend analysis"
+                    })
+                    st.rerun()
+           
+            with chart_col2:
+                if st.button("📊 Bar Chart", use_container_width=True, help="Show crime statistics as bar chart"):
+                    st.session_state.messages.append({
+                        "role": "user",
+                        "content": "show bar chart 2024"
+                    })
+                    st.rerun()
+               
+                if st.button("🎯 Hotspots", use_container_width=True, help="Show crime hotspot analysis"):
+                    st.session_state.messages.append({
+                        "role": "user",
+                        "content": "show hotspot analysis"
+                    })
+                    st.rerun()
+           
+            st.divider()
+           
             # Professional directory
             st.subheader("📞 Contacts")
-            
+           
             if st.button("📞 Directory", use_container_width=True):
                 directory = bot.get_professional_directory()
                 st.session_state.messages.append({
@@ -1354,17 +1697,17 @@ def main():
                     "content": directory
                 })
                 st.rerun()
-            
+           
             st.divider()
-            
+           
             # System utilities
             st.subheader("🔧 System")
-            
+           
             if st.button("🗑️ Clear Chat", use_container_width=True):
                 st.session_state.messages = []
                 st.success("Chat cleared.")
                 st.rerun()
-            
+           
             # Clean system information
             st.divider()
             st.markdown("""
@@ -1386,11 +1729,11 @@ def main():
     if prompt := st.chat_input("Enter case details, legal query, or request professional assistance..."):
         # Add user message
         st.session_state.messages.append({"role": "user", "content": prompt})
-        
+       
         # Get professional response
         with st.spinner("Processing professional inquiry..."):
             response = bot.process_professional_query(prompt)
-        
+       
         # Handle special responses
         if response == "crime_map_requested":
             # Display crime map in main area
@@ -1399,19 +1742,19 @@ def main():
                 st.markdown('<div class="crime-map-container">', unsafe_allow_html=True)
                 st.subheader("🗺️ St. Kitts & Nevis Crime Hotspot Map")
                 st.markdown("*Interactive crime intelligence map showing current hotspots and police stations*")
-                
+               
                 try:
                     crime_map = bot.create_professional_crime_map()
                     folium_static(crime_map, width=800, height=400)
-                    
+                   
                     response = "**CRIME HOTSPOT MAP DISPLAYED ABOVE**\n\nThe tactical intelligence map shows:\n• Current crime hotspots with risk assessment\n• Police station locations and coverage areas\n• Crime incident data by geographic area\n• Multiple view layers for operational planning\n\n**Officer, use map controls to zoom and switch views for tactical analysis.**"
-                    
+                   
                 except Exception as e:
                     response = f"**MAP ERROR**: Unable to display crime map. Error: {str(e)}\n\nPlease try again or contact system administrator."
-                
+               
                 st.markdown('</div>', unsafe_allow_html=True)
                 st.markdown("---")
-        
+       
         # Add bot response
         st.session_state.messages.append({"role": "assistant", "content": response})
         st.rerun()
