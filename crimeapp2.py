@@ -280,12 +280,55 @@ def main():
     if 'chat_history' not in st.session_state:
         st.session_state.chat_history = []
 
-    # Header
-    st.markdown("""
+# Display header with background image
+def display_header():
+    # Check if image file exists in the current directory
+    image_files = ['crime_board_image.jpg', 'crime_board_image.png', 'crime_scene.jpg', 'detective_board.jpg']
+    bg_image_style = ""
+    
+    for img_file in image_files:
+        if os.path.exists(img_file):
+            # Use streamlit's image display
+            st.markdown("""
+            <style>
+            .main-header-with-bg {
+                background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7));
+                padding: 2rem;
+                border-radius: 15px;
+                text-align: center;
+                margin-bottom: 2rem;
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+                border: 2px solid #8B0000;
+                position: relative;
+            }
+            </style>
+            """, unsafe_allow_html=True)
+            
+            # Display the background image
+            col1, col2, col3 = st.columns([1, 2, 1])
+            with col2:
+                st.image(img_file, use_column_width=True)
+            
+            st.markdown(f"""
+            <div class="main-header-with-bg">
+                <div class="main-title">🕵🏿‍♂️ SECURO 🕵🏿‍♀️</div>
+                <div class="subtitle">Crime Analysis & Forensic Intelligence System</div>
+                <div class="subtitle">🇰🇳 St. Kitts and Nevis Division 🇰🇳</div>
+            </div>
+            """, unsafe_allow_html=True)
+            return
+    
+    # Fallback header without background image
+    st.markdown(f"""
     <div class="main-header">
-        <div class="main-title">🕵️ SECURO 🕵️</div>
-        <div class="subtitle">Crime Analysis & Forensic Intelligence System</div>
-        <div class="subtitle">🇰🇳 St. Kitts and Nevis Division 🇰🇳</div>
+        <div style="background: rgba(0,0,0,0.8); padding: 2rem; border-radius: 15px;">
+            <div class="main-title">🕵🏿‍♂️ SECURO 🕵🏿‍♀️</div>
+            <div class="subtitle">Crime Analysis & Forensic Intelligence System</div>
+            <div class="subtitle">🇰🇳 St. Kitts and Nevis Division 🇰🇳</div>
+            <div style="color: #FFD700; font-size: 0.9rem; margin-top: 1rem;">
+                📸 Place your crime board image in the app directory for background display
+            </div>
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
