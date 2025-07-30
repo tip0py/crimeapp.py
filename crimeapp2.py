@@ -279,7 +279,7 @@ def main():
     img_file = "crime_board_image.jpg"
     if os.path.exists(img_file):
         st.image(img_file, use_column_width=True)
-        break
+        
 
     # Authentication section
     if not st.session_state.authenticated:
