@@ -278,7 +278,7 @@ def main():
     # Check for crime board image
     img_file = "crime_board_image.jpg"
     if os.path.exists(img_file):
-    st.image(img_file, use_column_width=True)
+        st.image(img_file, use_column_width=True)
         break
 
     # Authentication section
