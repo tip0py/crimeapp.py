@@ -1492,33 +1492,44 @@ def init_session_state():
 
 def load_login_image():
     """Load and display the login image with multiple fallback options"""
-    try:
+    try: # <--- This is the start of the outer try block
         # Check multiple possible locations for the image
         image_paths = ["securo.jpeg", "images/securo.jpeg", "assets/securo.jpeg", "./securo.jpeg"]
         image_loaded = False
 
         for path in image_paths:
             if os.path.exists(path):
-                try:
+                try: # Inner try for image opening
                     image = Image.open(path)
                     # Center the image and make it responsive
                     col1, col2, col3 = st.columns([1, 2, 1])
                     with col2:
                         st.image(image, use_column_width=True)
                     image_loaded = True
-                    break
+                    break # Exit the for loop once image is loaded
                 except Exception as img_error:
                     st.warning(f"Error loading image from {path}: {str(img_error)}")
-                    continue
+                    continue # Try the next path
 
         if not image_loaded:
             # Display a placeholder with enhanced styling
             st.markdown("""
             <div style="text-align: center; padding: 40px; background: linear-gradient(45deg, #1a1a1a, #333); border-radius: 15px; margin: 20px 0;">
                 <h2 style="color: #FFFF00; font-size: 3rem; margin: 0;">🛡️ SECURO</h2>
-            <p style="color: #ffffff; margin: 10px 0;">Professional Crime Investigation System</p>
+                <p style="color: #ffffff; margin: 10px 0;">Professional Crime Investigation System</p>
+            </div>
+            """, unsafe_allow_html=True)
+
+    except Exception as e: # <--- ADD THIS OUTER EXCEPT BLOCK
+        st.error(f"An unexpected error occurred in load_login_image: {str(e)}")
+        # You might also want to display the fallback HTML here if the error prevents the 'if not image_loaded' block from running
+        st.markdown("""
+        <div style="text-align: center; padding: 40px; background: linear-gradient(45deg, #1a1a1a, #333); border-radius: 15px; margin: 20px 0;">
+            <h2 style="color: #FFFF00; font-size: 3rem; margin: 0;">🛡️ SECURO - Error</h2>
+            <p style="color: #ffffff; margin: 10px 0;">Professional Crime Investigation System - An error occurred during image loading.</p>
         </div>
         """, unsafe_allow_html=True)
+
 
 def show_professional_login():
     """Display professional login/registration page with enhanced styling and image"""
