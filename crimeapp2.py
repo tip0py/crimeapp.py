@@ -276,7 +276,7 @@ def main():
     """, unsafe_allow_html=True)
 
     # Check for crime board image
-    image_files = ['crime_board_image.jpg', 'crime_board_image.png', 'crime_scene.jpg']
+    image_files = "crime_board_image.jpg"
     for img_file in image_files:
         if os.path.exists(img_file):
             st.image(img_file, use_column_width=True)
