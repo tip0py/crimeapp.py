@@ -4,7 +4,7 @@ import pandas as pd
 import base64
 
 # Load image
-bg_image_path = "/mnt/data/918bce7f5032dc7b9baecf310eeefa5d.jpg"
+bg_image_path = "assets/bg.jpg"
 qa_csv_path = "/mnt/data/criminal_justice_qa.csv"
 
 # Set custom page config
