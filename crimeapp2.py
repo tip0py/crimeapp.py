@@ -1870,15 +1870,4 @@ def main():
         st.info("Please refresh the page or contact system administrator.")
 
 if __name__ == "__main__":
-    main(): 3rem; margin: 0;">🛡️ SECURO</h2>
-                <p style="color: #ffffff; margin: 10px 0;">Professional Crime Investigation System</p>
-                <p style="color: #888; font-size: 0.8rem;">Logo image not found. Place 'securo.jpeg' in the project directory.</p>
-            </div>
-            """, unsafe_allow_html=True)
-
-    except Exception as e:
-        st.error(f"Error in image loading function: {str(e)}")
-        # Display fallback logo
-        st.markdown("""
-        <div style="text-align: center; padding: 40px; background: linear-gradient(45deg, #1a1a1a, #333); border-radius: 15px; margin: 20px 0;">
-            <h2 style="color: #FFFF00; font-size
+    main()
