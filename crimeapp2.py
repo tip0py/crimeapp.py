@@ -498,7 +498,7 @@ if 'csv_data' not in st.session_state:
     st.session_state.csv_data = load_csv_data()
 
 if st.session_state.csv_data is not None:
-    st.success(f"✅ SecuroCrimeApp.csv loaded successfully! {len(st.session_state.csv_data)} records found.")
+    st.success(f"✅ criminal_justice_qa.csv loaded successfully! {len(st.session_state.csv_data)} records found.")
     
     # Show a preview of the data
     with st.expander("📊 Preview Crime Database"):
@@ -510,7 +510,7 @@ if st.session_state.csv_data is not None:
         for i, col in enumerate(st.session_state.csv_data.columns):
             st.write(f"• {col}")
 else:
-    st.error("❌ Could not load crime database. Make sure 'SecuroCrimeApp.csv' is in the same folder as this app.")
+    st.error("❌ Could not load crime database. Make sure 'criminal_justice_qa.csv' is in the same folder as this app.")
 
 # Sidebar (only show if expanded)
 if st.session_state.sidebar_state == "expanded":
