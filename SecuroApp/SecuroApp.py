@@ -21,375 +21,7 @@ st.set_page_config(
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&display=swap');
-   
-    /* Hide default Streamlit elements */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
-   
-    /* Main app background */
-    .stApp {
-        background: linear-gradient(135deg, #0a0a0a 0%, #2e1a1a 50%, #3e1616 100%);
-        font-family: 'JetBrains Mono', monospace;
-    }
-   
-    /* Particles animation */
-    .particles {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-        z-index: 1;
-    }
-
-    .particle {
-        position: absolute;
-        width: 2px;
-        height: 2px;
-        background: rgba(255, 68, 68, 0.3);
-        border-radius: 50%;
-        animation: float 10s infinite linear;
-    }
-
-    @keyframes float {
-        0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
-        10% { opacity: 1; }
-        90% { opacity: 1; }
-        100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
-    }
-   
-    /* Header styling */
-    .main-header {
-        text-align: center;
-        margin-bottom: 30px;
-        padding: 20px;
-        background: rgba(0, 0, 0, 0.7);
-        border-radius: 15px;
-        border: 1px solid rgba(255, 68, 68, 0.3);
-        backdrop-filter: blur(10px);
-        position: relative;
-        overflow: hidden;
-    }
-
-    .main-header::before {
-        content: '';
-        position: absolute;
-        top: -50%;
-        left: -50%;
-        width: 200%;
-        height: 200%;
-        background: linear-gradient(45deg, transparent, rgba(255, 68, 68, 0.1), transparent);
-        animation: scan 3s infinite;
-    }
-
-    @keyframes scan {
-        0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
-        100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
-    }
-
-    .main-header h1 {
-        font-size: 3rem;
-        color: #ff4444;
-        text-shadow: 0 0 20px rgba(255, 68, 68, 0.5);
-        margin-bottom: 10px;
-        position: relative;
-        z-index: 2;
-        font-weight: 700;
-        font-family: 'JetBrains Mono', monospace;
-    }
-
-    .main-header .tagline {
-        font-size: 1rem;
-        color: #888;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-        position: relative;
-        z-index: 2;
-        font-family: 'JetBrains Mono', monospace;
-    }
-
-    .main-header .location {
-        font-size: 0.9rem;
-        color: #ff4444;
-        margin-top: 5px;
-        position: relative;
-        z-index: 2;
-        font-family: 'JetBrains Mono', monospace;
-    }
-   
-    /* Sidebar styling - Multiple selectors for different Streamlit versions */
-    .css-1d391kg, .css-1cypcdb, .css-k1vhr6, .css-1lcbmhc, .css-17eq0hr,
-    section[data-testid="stSidebar"], .stSidebar, [data-testid="stSidebar"] > div,
-    .css-1aumxhk, .css-hxt7ib, .css-17lntkn {
-        background: rgba(40, 20, 20, 0.9) !important;
-        border-right: 1px solid rgba(255, 68, 68, 0.3) !important;
-        backdrop-filter: blur(10px) !important;
-    }
-   
-    /* Sidebar header styling */
-    section[data-testid="stSidebar"] .css-10trblm {
-        color: #ff4444 !important;
-    }
-   
-    /* Sidebar content background */
-    .css-1cypcdb .css-17lntkn {
-        background: transparent !important;
-    }
-   
-    /* Emergency contacts styling */
-    .contact-item {
-        background: rgba(0, 0, 0, 0.5);
-        padding: 12px;
-        margin-bottom: 8px;
-        border-radius: 8px;
-        border-left: 3px solid #ff4444;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        color: #e0e0e0;
-        font-family: 'JetBrains Mono', monospace;
-    }
-
-    .contact-item:hover {
-        background: rgba(255, 68, 68, 0.1);
-        transform: translateX(5px);
-    }
-
-    .contact-name {
-        color: #e0e0e0;
-        font-size: 0.9rem;
-        font-weight: 500;
-        font-family: 'JetBrains Mono', monospace;
-    }
-
-    .contact-number {
-        color: #ff4444;
-        font-size: 0.8rem;
-        margin-top: 3px;
-        font-family: 'JetBrains Mono', monospace;
-    }
-   
-    /* Sidebar toggle button */
-    .sidebar-toggle {
-        position: fixed;
-        top: 70px;
-        left: 20px;
-        z-index: 999;
-        background: linear-gradient(135deg, #ff4444, #cc3333);
-        border: none;
-        border-radius: 8px;
-        color: white;
-        padding: 10px 15px;
-        cursor: pointer;
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 0.8rem;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(255, 68, 68, 0.3);
-    }
-   
-    .sidebar-toggle:hover {
-        transform: scale(1.05);
-        box-shadow: 0 6px 20px rgba(255, 68, 68, 0.5);
-    }
-   
-    /* Map container with better styling */
-    .map-container {
-        background: rgba(0, 0, 0, 0.8);
-        border-radius: 10px;
-        padding: 0;
-        border: 1px solid rgba(255, 68, 68, 0.3);
-        position: relative;
-        height: 300px;
-        overflow: hidden;
-        margin-bottom: 15px;
-    }
-   
-    /* Map iframe styling */
-    .crime-map iframe {
-        width: 100%;
-        height: 100%;
-        border: none;
-        border-radius: 10px;
-        filter: invert(0.9) hue-rotate(180deg) saturate(1.2);
-    }
-
-    .map-placeholder {
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(45deg, #2e1a1a, #3e1616);
-        border-radius: 8px;
-        position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #666;
-        font-size: 0.8rem;
-        font-family: 'JetBrains Mono', monospace;
-    }
-
-    .hotspot {
-        position: absolute;
-        width: 12px;
-        height: 12px;
-        background: #ff4444;
-        border-radius: 50%;
-        animation: pulse-hotspot 2s infinite;
-        cursor: pointer;
-    }
-
-    .hotspot::after {
-        content: '';
-        position: absolute;
-        top: -2px;
-        left: -2px;
-        right: -2px;
-        bottom: -2px;
-        border: 2px solid rgba(255, 68, 68, 0.5);
-        border-radius: 50%;
-        animation: ripple 2s infinite;
-    }
-
-    @keyframes pulse-hotspot {
-        0%, 100% { opacity: 1; transform: scale(1); }
-        50% { opacity: 0.7; transform: scale(1.2); }
-    }
-
-    @keyframes ripple {
-        0% { transform: scale(1); opacity: 1; }
-        100% { transform: scale(2); opacity: 0; }
-    }
-
-    .hotspot-1 { top: 30%; left: 25%; }
-    .hotspot-2 { top: 45%; left: 60%; }
-    .hotspot-3 { top: 70%; left: 40%; }
-    .hotspot-4 { top: 25%; left: 75%; }
-   
-    /* Chat styling */
-    .chat-message {
-        margin-bottom: 20px;
-        animation: fadeInUp 0.5s ease;
-    }
-
-    @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    .user-message {
-        text-align: right;
-    }
-
-    .bot-message {
-        text-align: left;
-    }
-
-    .message-content {
-        display: inline-block;
-        padding: 15px 20px;
-        border-radius: 15px;
-        max-width: 80%;
-        position: relative;
-        font-family: 'JetBrains Mono', monospace;
-    }
-
-    .user-message .message-content {
-        background: linear-gradient(135deg, #ff4444, #cc3333);
-        color: #fff;
-        border-bottom-right-radius: 5px;
-    }
-
-    .bot-message .message-content {
-        background: rgba(0, 0, 0, 0.6);
-        color: #e0e0e0;
-        border: 1px solid rgba(255, 68, 68, 0.3);
-        border-bottom-left-radius: 5px;
-    }
-
-    .message-time {
-        font-size: 0.7rem;
-        color: #888;
-        margin-top: 5px;
-        font-family: 'JetBrains Mono', monospace;
-    }
-   
-    /* Status bar */
-    .status-bar {
-        background: rgba(0, 0, 0, 0.8);
-        padding: 10px 20px;
-        border-radius: 25px;
-        margin-top: 20px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border: 1px solid rgba(255, 68, 68, 0.2);
-        font-family: 'JetBrains Mono', monospace;
-    }
-
-    .status-item {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 0.8rem;
-        color: #e0e0e0;
-    }
-
-    .status-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        animation: pulse 2s infinite;
-    }
-
-    .status-online { background: #ff4444; }
-    .status-processing { background: #cc3333; }
-    .status-evidence { background: #ff6666; }
-
-    @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.3; }
-    }
-   
-    /* Input styling */
-    .stTextInput input {
-        background: rgba(0, 0, 0, 0.5) !important;
-        border: 1px solid rgba(255, 68, 68, 0.3) !important;
-        border-radius: 25px !important;
-        color: #e0e0e0 !important;
-        font-family: 'JetBrains Mono', monospace !important;
-    }
-
-    .stTextInput input:focus {
-        border-color: #ff4444 !important;
-        box-shadow: 0 0 20px rgba(255, 68, 68, 0.2) !important;
-    }
-   
-    /* Button styling */
-    .stButton button {
-        background: linear-gradient(135deg, #ff4444, #cc3333) !important;
-        border: none !important;
-        border-radius: 25px !important;
-        color: #fff !important;
-        font-family: 'JetBrains Mono', monospace !important;
-        font-weight: 500 !important;
-        transition: all 0.3s ease !important;
-    }
-
-    .stButton button:hover {
-        transform: scale(1.05) !important;
-        box-shadow: 0 0 20px rgba(255, 68, 68, 0.4) !important;
-    }
-   
-    /* Section headers */
-    .section-header {
-        color: #ff4444;
-        font-size: 1.1rem;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        margin-bottom: 15px;
-        font-family: 'JetBrains Mono', monospace;
-        font-weight: 500;
-    }
+    /* ...existing CSS code... */
 </style>
 """, unsafe_allow_html=True)
 
@@ -408,24 +40,29 @@ def load_csv_data():
         st.error(f"❌ Error loading CSV: {str(e)}")
         return None
 
+# Load CSV into session state if not already loaded
+if 'csv_data' not in st.session_state or st.session_state.csv_data is None:
+    st.session_state.csv_data = load_csv_data()
+if st.session_state.csv_data is not None:
+    st.dataframe(st.session_state.csv_data.head())
+
 def search_csv_data(df, query):
     """Search through CSV data for relevant information"""
     if df is None or df.empty:
         return "No CSV data loaded. Please upload a CSV file to search through crime data."
-    
+   
     search_term = query.lower()
     results = []
-    
+   
     # Search through all text columns
     for column in df.columns:
         if df[column].dtype == 'object':  # Text columns
             mask = df[column].astype(str).str.lower().str.contains(search_term, na=False)
             matching_rows = df[mask]
-            
             if not matching_rows.empty:
                 for _, row in matching_rows.iterrows():
                     results.append(f"Found in {column}: {row.to_dict()}")
-    
+   
     if results:
         return "\n\n".join(results[:3])  # Return top 3 results
     else:
@@ -443,9 +80,6 @@ if 'messages' not in st.session_state:
 
 if 'sidebar_state' not in st.session_state:
     st.session_state.sidebar_state = "expanded"
-
-if 'csv_data' not in st.session_state:
-    st.session_state.csv_data = None
 
 # Header with sidebar toggle
 col1, col2 = st.columns([1, 10])
@@ -475,7 +109,6 @@ function createParticles() {
     const particlesContainer = document.getElementById('particles');
     if (particlesContainer) {
         const particleCount = 40;
-       
         for (let i = 0; i < particleCount; i++) {
             const particle = document.createElement('div');
             particle.className = 'particle';
@@ -490,26 +123,13 @@ createParticles();
 </script>
 """, unsafe_allow_html=True)
 
-# Load CSV data automatically
+# Load CSV data status
 st.markdown('<div class="section-header">📊 Crime Data Status</div>', unsafe_allow_html=True)
-
-# Auto-load CSV data
-csv_filename = "criminal_justice_qa.csv"  # ← PUT YOUR CSV FILENAME HERE!
-
-# STEP 1: Load your CSV with PANDAS 🐼
-print("\n STEP 1: Loading your knowledge base...")
-df = pd.read_csv(csv_filename)
-print(f"✅ Loaded {len(df)} knowledge entries!")
-
-# Show what we loaded
-print(f"\n📊 Your data:")
-display(df.head())
 
 # Sidebar (only show if expanded)
 if st.session_state.sidebar_state == "expanded":
     with st.sidebar:
         st.markdown('<div class="section-header">🚨 Emergency Contacts</div>', unsafe_allow_html=True)
-       
         emergency_contacts = [
             {"name": "Emergency Hotline", "number": "911", "type": "police"},
             {"name": "Police Department", "number": "465-2241", "type": "police"},
@@ -519,7 +139,6 @@ if st.session_state.sidebar_state == "expanded":
             {"name": "Red Cross", "number": "465-2584", "type": "forensic"},
             {"name": "NEMA (Emergency Mgmt)", "number": "466-5100", "type": "legal"}
         ]
-       
         for contact in emergency_contacts:
             if st.button(f"📞 {contact['name']}\n{contact['number']}", key=contact['name']):
                 st.session_state.messages.append({
@@ -528,10 +147,7 @@ if st.session_state.sidebar_state == "expanded":
                     "timestamp": datetime.datetime.now().strftime("%H:%M:%S")
                 })
                 st.rerun()
-       
         st.markdown('<div class="section-header">📍 Crime Hotspots Map</div>', unsafe_allow_html=True)
-       
-        # Real Google Maps embed for St. Kitts & Nevis
         st.markdown("""
         <div class="map-container crime-map">
             <iframe
@@ -542,17 +158,13 @@ if st.session_state.sidebar_state == "expanded":
             </iframe>
         </div>
         """, unsafe_allow_html=True)
-       
-        # Interactive hotspot buttons
         st.markdown('<div class="section-header">🎯 Active Crime Zones</div>', unsafe_allow_html=True)
-       
         hotspots = [
             {"name": "Basseterre Downtown", "level": "🔴 High Risk", "coords": "17.3026, -62.7261"},
             {"name": "Sandy Point", "level": "🟡 Medium Risk", "coords": "17.3580, -62.8419"},
             {"name": "Charlestown (Nevis)", "level": "🟠 Active Cases", "coords": "17.1373, -62.6131"},
             {"name": "Frigate Bay", "level": "🟡 Tourist Area", "coords": "17.2742, -62.6897"}
         ]
-       
         for hotspot in hotspots:
             if st.button(f"{hotspot['level']} {hotspot['name']}", key=f"hotspot_{hotspot['name']}"):
                 st.session_state.messages.append({
@@ -602,7 +214,6 @@ with col2:
                 "content": user_input,
                 "timestamp": datetime.datetime.now().strftime("%H:%M:%S")
             })
-           
             # Generate response based on CSV data
             response = search_csv_data(st.session_state.csv_data, user_input)
             st.session_state.messages.append({
@@ -610,7 +221,6 @@ with col2:
                 "content": response,
                 "timestamp": datetime.datetime.now().strftime("%H:%M:%S")
             })
-           
             st.rerun()
 
 # Status bar
