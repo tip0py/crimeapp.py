@@ -494,23 +494,16 @@ createParticles();
 st.markdown('<div class="section-header">📊 Crime Data Status</div>', unsafe_allow_html=True)
 
 # Auto-load CSV data
-if 'csv_data' not in st.session_state:
-    st.session_state.csv_data = load_csv_data()
+csv_filename = "criminal_justice_qa.csv"  # ← PUT YOUR CSV FILENAME HERE!
 
-if st.session_state.csv_data is not None:
-    st.success(f"✅ criminal_justice_qa.csv loaded successfully! {len(st.session_state.csv_data)} records found.")
-    
-    # Show a preview of the data
-    with st.expander("📊 Preview Crime Database"):
-        st.dataframe(st.session_state.csv_data.head())
-        
-    # Show column info
-    with st.expander("📋 Database Structure"):
-        st.write("**Columns in your crime database:**")
-        for i, col in enumerate(st.session_state.csv_data.columns):
-            st.write(f"• {col}")
-else:
-    st.error("❌ Could not load crime database. Make sure 'criminal_justice_qa.csv' is in the same folder as this app.")
+# STEP 1: Load your CSV with PANDAS 🐼
+print("\n STEP 1: Loading your knowledge base...")
+df = pd.read_csv(csv_filename)
+print(f"✅ Loaded {len(df)} knowledge entries!")
+
+# Show what we loaded
+print(f"\n📊 Your data:")
+display(df.head())
 
 # Sidebar (only show if expanded)
 if st.session_state.sidebar_state == "expanded":
