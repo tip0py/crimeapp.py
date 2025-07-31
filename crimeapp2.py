@@ -4,8 +4,8 @@ import datetime
 import random
 import google.generativem ai as genai
 
-GOOGLE_API_KEY = AIzaSyCkSjJBcI_wqA37bdF-08ROrMFaGYObyjA
-genai.configure(api_key = AIzaSyCkSjJBcI_wqA37bdF-08ROrMFaGYObyjA)
+GOOGLE_API_KEY = AIzaSyCkSjJBcI_wqA37bdF08ROrMFaGYObyjA
+genai.configure(api_key = AIzaSyCkSjJBcI_wqA37bdF08ROrMFaGYObyjA)
 
 #Initialize the AI model. (this is the free api key we will put in openai later)
 model = genai.GenerativeModel('gemini-1.5-flash')
