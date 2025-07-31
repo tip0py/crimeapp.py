@@ -6,7 +6,7 @@ import random
 # Page configuration
 st.set_page_config(
     page_title="SECURO - St. Kitts & Nevis Crime AI Assistant",
-    page_icon="🚔",
+    page_icon="https://i.postimg.cc/V69LH7F4/Logo.jpg",
     layout="wide",
     initial_sidebar_state="expanded"
 )
