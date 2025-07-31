@@ -3,60 +3,16 @@ import time
 import datetime
 import random
 import pandas as pd
-import streamlit as st
-import pandas as pd
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
-# Load Q&A dataset
-@st.cache_data
-def load_qa_data():
-    df = pd.read_csv("/mnt/data/criminal_justice_qa.csv")
-    df = df.dropna()
-    return df
+import google.generativeai as genai
 
-df_qa = load_qa_data()
-
-# Build vectorizer for questions
-vectorizer = TfidfVectorizer()
-question_vectors = vectorizer.fit_transform(df_qa['question'])
-
-# Chatbot function to find best answer
-def get_best_answer(user_input):
-    user_vector = vectorizer.transform([user_input])
-    similarity = cosine_similarity(user_vector, question_vectors)
-    best_match_idx = similarity.argmax()
-    best_score = similarity[0, best_match_idx]
-
-    if best_score < 0.3:  # Confidence threshold
-        return "I'm not sure how to answer that. Could you please rephrase or ask something else?"
-    return df_qa.iloc[best_match_idx]['answer']
-
-# Streamlit UI
-st.set_page_config(page_title="SECURO - Crime Q&A Chatbot", layout="wide")
-st.title("🔎 SECURO - Crime & Justice Chatbot")
-st.write("Ask a question about criminal justice, crime prevention, or related topics.")
-
-# Chat interface
-if "chat_history" not in st.session_state:
-    st.session_state.chat_history = []
-
-user_query = st.text_input("Your question", key="user_input")
-
-if st.button("Ask"):
-    if user_query.strip():
-        bot_reply = get_best_answer(user_query)
-        st.session_state.chat_history.append(("You", user_query))
-        st.session_state.chat_history.append(("SECURO", bot_reply))
-        st.experimental_rerun()
-
-# Display chat history
-for speaker, message in st.session_state.chat_history:
-    st.markdown(f"**{speaker}:** {message}")
+# Initialize the AI model (API key should be set via environment variable or Streamlit secrets)
+# genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])  # Uncomment when you have API key configured
+# model = genai.GenerativeModel('gemini-1.5-flash')
 
 # Page configuration
 st.set_page_config(
     page_title="SECURO - St. Kitts & Nevis Crime AI Assistant",
-    page_icon="🚔",
+    page_icon="https://i.postimg.cc/V69LH7F4/Logo.jpg",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -212,6 +168,29 @@ st.markdown("""
         font-size: 0.8rem;
         margin-top: 3px;
         font-family: 'JetBrains Mono', monospace;
+    }
+   
+    /* Sidebar toggle button */
+    .sidebar-toggle {
+        position: fixed;
+        top: 70px;
+        left: 20px;
+        z-index: 999;
+        background: linear-gradient(135deg, #ff4444, #cc3333);
+        border: none;
+        border-radius: 8px;
+        color: white;
+        padding: 10px 15px;
+        cursor: pointer;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.8rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(255, 68, 68, 0.3);
+    }
+   
+    .sidebar-toggle:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 20px rgba(255, 68, 68, 0.5);
     }
    
     /* Map container with better styling */
@@ -411,212 +390,179 @@ st.markdown("""
         font-family: 'JetBrains Mono', monospace;
         font-weight: 500;
     }
-
-    /* CSV Data Status styling */
-    .csv-status {
-        background: rgba(0, 0, 0, 0.6);
-        border: 1px solid rgba(255, 68, 68, 0.3);
-        border-radius: 10px;
-        padding: 15px;
-        margin-bottom: 20px;
-        font-family: 'JetBrains Mono', monospace;
-    }
-
-    .csv-success {
-        border-color: #44ff44;
-        background: rgba(0, 40, 0, 0.6);
-    }
-
-    .csv-error {
-        border-color: #ff4444;
-        background: rgba(40, 0, 0, 0.6);
-    }
 </style>
 """, unsafe_allow_html=True)
 
-# ==========================================
-# SIMPLE CSV FUNCTIONS - EASY TO UNDERSTAND
-# ==========================================
-
-def load_csv_file():
-    """
-    Simple function to load CSV file
-    Returns the dataframe if successful, None if failed
-    """
+# CSV data handling
+@st.cache_data
+def load_csv_data():
+    """Load and cache CSV data"""
+    csv_filename = "SecuroCrimeApp.csv"  # Your CSV filename
     try:
-        # Try to load the CSV file
-        df = pd.read_csv("criminal_justice_qa.csv")  # ← Change this filename to your CSV
+        df = pd.read_csv(csv_filename)
         return df
     except FileNotFoundError:
-        return "FILE_NOT_FOUND"
+        st.error(f"❌ CSV file '{csv_filename}' not found. Please make sure it's in the same folder as this app.")
+        return None
     except Exception as e:
-        return f"ERROR: {str(e)}"
+        st.error(f"❌ Error loading CSV: {str(e)}")
+        return None
 
-def search_in_csv(df, user_question):
-    """
-    Simple function to search through CSV data
-    Takes the dataframe and user question, returns relevant answers
-    """
-    if df is None or isinstance(df, str):
-        return "❌ No CSV data loaded. Please make sure your CSV file is in the same folder."
+def search_csv_data(df, query):
+    """Search through CSV data for relevant information"""
+    if df is None or df.empty:
+        return "No CSV data loaded. Please upload a CSV file to search through crime data."
     
-    # Convert user question to lowercase for better matching
-    question_lower = user_question.lower()
-    
-    # Search through all columns for matching text
+    search_term = query.lower()
     results = []
     
-    for index, row in df.iterrows():
-        # Check if any cell in this row contains words from the user's question
-        row_text = " ".join(str(cell).lower() for cell in row.values if pd.notna(cell))
-        
-        # Simple keyword matching
-        words_in_question = question_lower.split()
-        matches = sum(1 for word in words_in_question if len(word) > 2 and word in row_text)
-        
-        if matches > 0:
-            # Format the result nicely
-            result_text = ""
-            for col_name, cell_value in row.items():
-                if pd.notna(cell_value) and str(cell_value).strip():
-                    result_text += f"**{col_name}:** {cell_value}\n"
+    # Search through all text columns
+    for column in df.columns:
+        if df[column].dtype == 'object':  # Text columns
+            mask = df[column].astype(str).str.lower().str.contains(search_term, na=False)
+            matching_rows = df[mask]
             
-            results.append((matches, result_text))
-    
-    # Sort by number of matches (best matches first)
-    results.sort(key=lambda x: x[0], reverse=True)
+            if not matching_rows.empty:
+                for _, row in matching_rows.iterrows():
+                    results.append(f"Found in {column}: {row.to_dict()}")
     
     if results:
-        # Return top 3 best matches
-        response = "🔍 **Found relevant information:**\n\n"
-        for i, (match_count, result_text) in enumerate(results[:3]):
-            response += f"**Result {i+1}:**\n{result_text}\n---\n\n"
-        return response
+        return "\n\n".join(results[:3])  # Return top 3 results
     else:
-        return f"❌ No matches found for '{user_question}'. Try asking about different topics or using simpler keywords."
+        return f"No matches found for '{query}' in the uploaded crime data. Try different search terms."
 
-# ==========================================
-# INITIALIZE SESSION STATE
-# ==========================================
-
+# Initialize session state
 if 'messages' not in st.session_state:
     st.session_state.messages = []
-    # Add welcome message
+    # Add initial bot message
     st.session_state.messages.append({
         "role": "assistant",
-        "content": "🚔 **Welcome to SECURO** - Your AI Crime Investigation Assistant!\n\nI'm ready to help analyze crime data for St. Kitts & Nevis law enforcement.\n\n📋 **How to use:**\n1. Make sure your CSV file is named 'criminal_justice_qa.csv' and is in the same folder\n2. Ask me questions about the crime data\n3. I'll search through the data and provide relevant information\n\n💬 **Try asking:** 'What crimes happened in Basseterre?' or 'Show me robbery cases'",
+        "content": "Welcome to SECURO, your AI crime investigation assistant for St. Kitts & Nevis law enforcement.\n\nI'm here to assist criminologists, police officers, forensic experts, and autopsy professionals with case analysis, evidence correlation, and investigative insights.\n\nPlease upload a CSV file with crime data to get started, then ask me questions about the data.\n\nHow can I assist with your investigation today?",
         "timestamp": datetime.datetime.now().strftime("%H:%M:%S")
     })
 
-if 'csv_loaded' not in st.session_state:
-    st.session_state.csv_loaded = False
+if 'sidebar_state' not in st.session_state:
+    st.session_state.sidebar_state = "expanded"
+
+if 'csv_data' not in st.session_state:
     st.session_state.csv_data = None
 
-# ==========================================
-# MAIN APP LAYOUT
-# ==========================================
+# Header with sidebar toggle
+col1, col2 = st.columns([1, 10])
 
-# Header
-st.markdown("""
-<div class="main-header">
-    <div class="particles" id="particles"></div>
-    <h1>SECURO</h1>
-    <div class="tagline">AI Crime Investigation Assistant</div>
-    <div class="location">🇰🇳 St. Kitts & Nevis Law Enforcement</div>
-</div>
-""", unsafe_allow_html=True)
+with col1:
+    if st.button("🔧", help="Toggle Sidebar", key="sidebar_toggle"):
+        if st.session_state.sidebar_state == "expanded":
+            st.session_state.sidebar_state = "collapsed"
+        else:
+            st.session_state.sidebar_state = "expanded"
+        st.rerun()
 
-# Load CSV data section
-st.markdown('<div class="section-header">📊 Crime Data Status</div>', unsafe_allow_html=True)
-
-# Try to load CSV on startup
-if not st.session_state.csv_loaded:
-    result = load_csv_file()
-    
-    if isinstance(result, pd.DataFrame):
-        st.session_state.csv_data = result
-        st.session_state.csv_loaded = True
-        st.markdown(f"""
-        <div class="csv-status csv-success">
-            ✅ <strong>CSV Data Loaded Successfully!</strong><br>
-            📁 File: criminal_justice_qa.csv<br>
-            📊 Records: {len(result)} rows, {len(result.columns)} columns<br>
-            🔍 Ready to answer questions about your crime data!
-        </div>
-        """, unsafe_allow_html=True)
-    elif result == "FILE_NOT_FOUND":
-        st.markdown("""
-        <div class="csv-status csv-error">
-            ❌ <strong>CSV File Not Found!</strong><br>
-            📁 Looking for: criminal_justice_qa.csv<br>
-            💡 Make sure your CSV file is in the same folder as this app and has the correct name.
-        </div>
-        """, unsafe_allow_html=True)
-    else:
-        st.markdown(f"""
-        <div class="csv-status csv-error">
-            ❌ <strong>Error Loading CSV:</strong><br>
-            {result}
-        </div>
-        """, unsafe_allow_html=True)
-
-# Sidebar
-with st.sidebar:
-    st.markdown('<div class="section-header">🚨 Emergency Contacts</div>', unsafe_allow_html=True)
-   
-    emergency_contacts = [
-        {"name": "Emergency Hotline", "number": "911"},
-        {"name": "Police Department", "number": "465-2241"},
-        {"name": "Hospital", "number": "465-2551"},
-        {"name": "Fire Department", "number": "465-2515"},
-        {"name": "Coast Guard", "number": "465-8384"},
-        {"name": "Red Cross", "number": "465-2584"},
-        {"name": "NEMA (Emergency)", "number": "466-5100"}
-    ]
-   
-    for contact in emergency_contacts:
-        if st.button(f"📞 {contact['name']}\n{contact['number']}", key=contact['name']):
-            st.session_state.messages.append({
-                "role": "assistant",
-                "content": f"🚨 **Emergency Contact Accessed:**\n\n📞 **{contact['name']}:** {contact['number']}\n\n⏰ Contact logged at {datetime.datetime.now().strftime('%H:%M:%S')} for case documentation.",
-                "timestamp": datetime.datetime.now().strftime("%H:%M:%S")
-            })
-            st.rerun()
-   
-    st.markdown('<div class="section-header">📍 Crime Hotspots Map</div>', unsafe_allow_html=True)
-   
-    # Real Google Maps embed for St. Kitts & Nevis
+with col2:
     st.markdown("""
-    <div class="map-container crime-map">
-        <iframe
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d243.44896!2d-62.7261!3d17.3026!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8c1a602b153c94b5%3A0x8e3f7a7c7b1b9f5e!2sBasseterre%2C%20St%20Kitts%20%26%20Nevis!5e1!3m2!1sen!2sus!4v1634567890123!5m2!1sen!2sus&maptype=satellite"
-            allowfullscreen=""
-            loading="lazy"
-            referrerpolicy="no-referrer-when-downgrade">
-        </iframe>
+    <div class="main-header">
+        <div class="particles" id="particles"></div>
+        <h1>SECURO</h1>
+        <div class="tagline">AI Crime Investigation Assistant</div>
+        <div class="location">🇰🇳 St. Kitts & Nevis Law Enforcement</div>
     </div>
     """, unsafe_allow_html=True)
-   
-    # Interactive hotspot buttons
-    st.markdown('<div class="section-header">🎯 Active Crime Zones</div>', unsafe_allow_html=True)
-   
-    hotspots = [
-        {"name": "Basseterre Downtown", "level": "🔴 High Risk", "coords": "17.3026, -62.7261"},
-        {"name": "Sandy Point", "level": "🟡 Medium Risk", "coords": "17.3580, -62.8419"},
-        {"name": "Charlestown (Nevis)", "level": "🟠 Active Cases", "coords": "17.1373, -62.6131"},
-        {"name": "Frigate Bay", "level": "🟡 Tourist Area", "coords": "17.2742, -62.6897"}
-    ]
-   
-    for hotspot in hotspots:
-        if st.button(f"{hotspot['level']} {hotspot['name']}", key=f"hotspot_{hotspot['name']}"):
-            st.session_state.messages.append({
-                "role": "assistant",
-                "content": f"📍 **Crime Hotspot Analysis:**\n\n🎯 **Location:** {hotspot['name']}\n📍 **Coordinates:** {hotspot['coords']}\n⚠️ **Status:** {hotspot['level']}\n\n🚨 **Recommendation:** Increased patrol presence and witness canvassing recommended for this area. Coordinating with local units for enhanced surveillance.",
-                "timestamp": datetime.datetime.now().strftime("%H:%M:%S")
-            })
-            st.rerun()
 
-# Chat interface
+# Particles animation script
+st.markdown("""
+<script>
+function createParticles() {
+    const particlesContainer = document.getElementById('particles');
+    if (particlesContainer) {
+        const particleCount = 40;
+       
+        for (let i = 0; i < particleCount; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.animationDelay = Math.random() * 10 + 's';
+            particle.style.animationDuration = (Math.random() * 10 + 15) + 's';
+            particlesContainer.appendChild(particle);
+        }
+    }
+}
+createParticles();
+</script>
+""", unsafe_allow_html=True)
+
+# Load CSV data automatically
+st.markdown('<div class="section-header">📊 Crime Data Status</div>', unsafe_allow_html=True)
+
+# Auto-load CSV data
+csv_filename = "criminal_justice_qa.csv"  # ← PUT YOUR CSV FILENAME HERE!
+
+# STEP 1: Load your CSV with PANDAS 🐼
+print("\n STEP 1: Loading your knowledge base...")
+df = pd.read_csv(csv_filename)
+print(f"✅ Loaded {len(df)} knowledge entries!")
+
+# Show what we loaded
+print(f"\n📊 Your data:")
+display(df.head())
+
+# Sidebar (only show if expanded)
+if st.session_state.sidebar_state == "expanded":
+    with st.sidebar:
+        st.markdown('<div class="section-header">🚨 Emergency Contacts</div>', unsafe_allow_html=True)
+       
+        emergency_contacts = [
+            {"name": "Emergency Hotline", "number": "911", "type": "police"},
+            {"name": "Police Department", "number": "465-2241", "type": "police"},
+            {"name": "Hospital", "number": "465-2551", "type": "hospital"},
+            {"name": "Fire Department", "number": "465-2515 / 465-7167", "type": "fire"},
+            {"name": "Coast Guard", "number": "465-8384 / 466-9280", "type": "legal"},
+            {"name": "Red Cross", "number": "465-2584", "type": "forensic"},
+            {"name": "NEMA (Emergency Mgmt)", "number": "466-5100", "type": "legal"}
+        ]
+       
+        for contact in emergency_contacts:
+            if st.button(f"📞 {contact['name']}\n{contact['number']}", key=contact['name']):
+                st.session_state.messages.append({
+                    "role": "assistant",
+                    "content": f"🚨 Emergency contact information accessed: {contact['name']} - {contact['number']}. Contact has been logged for case documentation.",
+                    "timestamp": datetime.datetime.now().strftime("%H:%M:%S")
+                })
+                st.rerun()
+       
+        st.markdown('<div class="section-header">📍 Crime Hotspots Map</div>', unsafe_allow_html=True)
+       
+        # Real Google Maps embed for St. Kitts & Nevis
+        st.markdown("""
+        <div class="map-container crime-map">
+            <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d243.44896!2d-62.7261!3d17.3026!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8c1a602b153c94b5%3A0x8e3f7a7c7b1b9f5e!2sBasseterre%2C%20St%20Kitts%20%26%20Nevis!5e1!3m2!1sen!2sus!4v1634567890123!5m2!1sen!2sus&maptype=satellite"
+                allowfullscreen=""
+                loading="lazy"
+                referrerpolicy="no-referrer-when-downgrade">
+            </iframe>
+        </div>
+        """, unsafe_allow_html=True)
+       
+        # Interactive hotspot buttons
+        st.markdown('<div class="section-header">🎯 Active Crime Zones</div>', unsafe_allow_html=True)
+       
+        hotspots = [
+            {"name": "Basseterre Downtown", "level": "🔴 High Risk", "coords": "17.3026, -62.7261"},
+            {"name": "Sandy Point", "level": "🟡 Medium Risk", "coords": "17.3580, -62.8419"},
+            {"name": "Charlestown (Nevis)", "level": "🟠 Active Cases", "coords": "17.1373, -62.6131"},
+            {"name": "Frigate Bay", "level": "🟡 Tourist Area", "coords": "17.2742, -62.6897"}
+        ]
+       
+        for hotspot in hotspots:
+            if st.button(f"{hotspot['level']} {hotspot['name']}", key=f"hotspot_{hotspot['name']}"):
+                st.session_state.messages.append({
+                    "role": "assistant",
+                    "content": f"📍 Crime hotspot analysis: {hotspot['name']} ({hotspot['coords']})\n\n{hotspot['level']} - Recommend increased patrol presence and witness canvassing in this area. Coordinating with local units for enhanced surveillance.",
+                    "timestamp": datetime.datetime.now().strftime("%H:%M:%S")
+                })
+                st.rerun()
+
+# Main chat area
 st.markdown('<div class="section-header">💬 Crime Investigation Chat</div>', unsafe_allow_html=True)
 
 # Display chat messages
@@ -642,14 +588,14 @@ col1, col2 = st.columns([5, 1])
 with col1:
     user_input = st.text_input(
         "Message",
-        placeholder="Ask questions about the crime data... (e.g., 'What crimes happened in 2023?')",
+        placeholder="Ask questions about the uploaded crime data...",
         label_visibility="collapsed",
         key="user_input"
     )
 
 with col2:
     if st.button("Send", type="primary"):
-        if user_input.strip():
+        if user_input:
             # Add user message
             st.session_state.messages.append({
                 "role": "user",
@@ -657,13 +603,8 @@ with col2:
                 "timestamp": datetime.datetime.now().strftime("%H:%M:%S")
             })
            
-            # Generate response by searching CSV data
-            if st.session_state.csv_loaded and st.session_state.csv_data is not None:
-                response = search_in_csv(st.session_state.csv_data, user_input)
-            else:
-                response = "❌ CSV data not loaded. Please make sure 'criminal_justice_qa.csv' is in the same folder as this app."
-            
-            # Add assistant response
+            # Generate response based on CSV data
+            response = search_csv_data(st.session_state.csv_data, user_input)
             st.session_state.messages.append({
                 "role": "assistant",
                 "content": response,
@@ -673,8 +614,7 @@ with col2:
             st.rerun()
 
 # Status bar
-csv_status = "CSV Data Ready" if st.session_state.csv_loaded else "CSV Data Missing"
-st.markdown(f"""
+st.markdown("""
 <div class="status-bar">
     <div class="status-item">
         <div class="status-dot status-online"></div>
@@ -682,33 +622,11 @@ st.markdown(f"""
     </div>
     <div class="status-item">
         <div class="status-dot status-processing"></div>
-        <span>{csv_status}</span>
+        <span>CSV Data Ready</span>
     </div>	
     <div class="status-item">
         <div class="status-dot status-evidence"></div>
         <span>Emergency Services Linked</span>
     </div>
 </div>
-""", unsafe_allow_html=True)
-
-# Particles animation script
-st.markdown("""
-<script>
-function createParticles() {
-    const particlesContainer = document.getElementById('particles');
-    if (particlesContainer) {
-        const particleCount = 40;
-       
-        for (let i = 0; i < particleCount; i++) {
-            const particle = document.createElement('div');
-            particle.className = 'particle';
-            particle.style.left = Math.random() * 100 + '%';
-            particle.style.animationDelay = Math.random() * 10 + 's';
-            particle.style.animationDuration = (Math.random() * 10 + 15) + 's';
-            particlesContainer.appendChild(particle);
-        }
-    }
-}
-createParticles();
-</script>
 """, unsafe_allow_html=True)
