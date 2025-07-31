@@ -5,7 +5,7 @@ import random
 import google.generativeai as genai
 
 GOOGLE_API_KEY = "AIzaSyCtVxLhiRTfXGC6AeJqt9z_g6dJ-bN7woU"
-genai.configure(api_key = AIzaSyCtVxLhiRTfXGC6AeJqt9z_g6dJ-bN7woU)
+genai.configure(api_key = "AIzaSyCtVxLhiRTfXGC6AeJqt9z_g6dJ-bN7woU")
 
 #Initialize the AI model. (this is the free api key we will put in openai later)
 model = genai.GenerativeModel('gemini-1.5-flash')
