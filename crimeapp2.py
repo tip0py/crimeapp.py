@@ -2,13 +2,12 @@ import streamlit as st
 import time
 import datetime
 import random
+import pandas as pd
 import google.generativeai as genai
 
-GOOGLE_API_KEY = "AIzaSyCtVxLhiRTfXGC6AeJqt9z_g6dJ-bN7woU"
-genai.configure(api_key = "AIzaSyCtVxLhiRTfXGC6AeJqt9z_g6dJ-bN7woU")
-
-#Initialize the AI model. (this is the free api key we will put in openai later)
-model = genai.GenerativeModel('gemini-1.5-flash')
+# Initialize the AI model (API key should be set via environment variable or Streamlit secrets)
+# genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])  # Uncomment when you have API key configured
+# model = genai.GenerativeModel('gemini-1.5-flash')
 
 # Page configuration
 st.set_page_config(
@@ -394,83 +393,43 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Crime database from the original
-crime_database = [
-    {"category": "Victims", "question": "What services are available for crime victims?", "answer": "Counseling, financial assistance, and victim advocacy groups."},
-    {"category": "Journalists", "question": "What are shield laws?", "answer": "Laws protecting journalists from revealing confidential sources."},
-    {"category": "Witnesses", "question": "What is a subpoena?", "answer": "A legal document ordering someone to testify in court."},
-    {"category": "Lawyers", "question": "What is double jeopardy?", "answer": "A procedural defense that prevents an accused person from being tried again on the same charges."},
-    {"category": "General Public", "question": "How do I check if someone has a criminal record?", "answer": "Contact the local police department or use background check services."},
-    {"category": "Lawyers", "question": "What is plea bargaining?", "answer": "An agreement where the defendant pleads guilty for a reduced sentence."},
-    {"category": "Cybercrime Specialists", "question": "What is phishing?", "answer": "A cyber attack that tricks people into giving sensitive information."},
-    {"category": "General Public", "question": "How do I get a restraining order?", "answer": "File a petition with the court explaining why you need protection."},
-    {"category": "Cold Case Units", "question": "What is a cold case?", "answer": "A criminal investigation that remains unsolved after a long period."},
-    {"category": "Cold Case Units", "question": "How are cold cases reopened?", "answer": "Through new evidence, DNA technology, or witness testimony."},
-    {"category": "Criminologists", "question": "What is the broken windows theory?", "answer": "A theory that visible signs of disorder lead to more crime."},
-    {"category": "Criminologists", "question": "What is white collar crime?", "answer": "Financially motivated, nonviolent crime committed by businesses and government professionals."},
-    {"category": "Forensics", "question": "How are fingerprints lifted?", "answer": "Using powders, chemicals, or alternate light sources to make them visible."},
-    {"category": "Criminal Psychologists", "question": "What is antisocial personality disorder?", "answer": "A mental condition linked to disregard for others' rights, often found in criminals."},
-    {"category": "Victims", "question": "What is victim impact statement?", "answer": "A written or oral statement given at sentencing describing the crime's impact."},
-    {"category": "Journalists", "question": "How do journalists cover crime ethically?", "answer": "By verifying facts, respecting privacy, and avoiding sensationalism."},
-    {"category": "Investigators", "question": "What is criminal profiling?", "answer": "Inferring characteristics of an offender based on crime scene evidence."},
-    {"category": "Criminal Psychologists", "question": "What is criminal insanity?", "answer": "A legal term meaning the defendant was unable to understand their actions."},
-    {"category": "Cybercrime Specialists", "question": "What is ransomware?", "answer": "Malicious software that blocks access to data until a ransom is paid."},
-    {"category": "Investigators", "question": "What is forensic entomology?", "answer": "The study of insects to estimate time of death."},
-    {"category": "Police", "question": "What is community policing?", "answer": "A strategy that focuses on building ties and working closely with communities."},
-    {"category": "Police", "question": "What is an arrest warrant?", "answer": "A document issued by a judge authorizing the arrest of a person."},
-    {"category": "Forensics", "question": "How is blood spatter analyzed?", "answer": "By examining patterns to reconstruct a crime scene."},
-    {"category": "Witnesses", "question": "Can I refuse to testify?", "answer": "In some cases, but you may be held in contempt of court."},
-    {"category": "Police", "question": "What does 'beyond reasonable doubt' mean?", "answer": "The standard of evidence required to convict in a criminal trial."}
-]
+# CSV data handling
+@st.cache_data
+def load_csv_data():
+    """Load and cache CSV data"""
+    csv_filename = "SecuroCrimeApp.csv"  # Your CSV filename
+    try:
+        df = pd.read_csv(csv_filename)
+        return df
+    except FileNotFoundError:
+        st.error(f"❌ CSV file '{csv_filename}' not found. Please make sure it's in the same folder as this app.")
+        return None
+    except Exception as e:
+        st.error(f"❌ Error loading CSV: {str(e)}")
+        return None
 
-def search_crime_database(query):
-    """Search the crime database for relevant answers"""
+def search_csv_data(df, query):
+    """Search through CSV data for relevant information"""
+    if df is None or df.empty:
+        return "No CSV data loaded. Please upload a CSV file to search through crime data."
+    
     search_term = query.lower()
-   
-    # Direct question match
-    for item in crime_database:
-        if search_term in item["question"].lower() or item["question"].lower()[:20] in search_term:
-            return item["answer"]
-   
-    # Keyword-based search
-    keywords = {
-        'victim': ['What services are available for crime victims?', 'What is victim impact statement?'],
-        'witness': ['What is a subpoena?', 'Can I refuse to testify?'],
-        'police': ['What is community policing?', 'What is an arrest warrant?', "What does 'beyond reasonable doubt' mean?"],
-        'forensic': ['How are fingerprints lifted?', 'How is blood spatter analyzed?', 'What is forensic entomology?'],
-        'cyber': ['What is phishing?', 'What is ransomware?'],
-        'legal': ['What is double jeopardy?', 'What is plea bargaining?'],
-        'restraining': ['How do I get a restraining order?'],
-        'cold case': ['What is a cold case?', 'How are cold cases reopened?'],
-        'criminal record': ['How do I check if someone has a criminal record?'],
-        'profiling': ['What is criminal profiling?'],
-        'insanity': ['What is criminal insanity?'],
-        'shield': ['What are shield laws?'],
-        'journalism': ['How do journalists cover crime ethically?'],
-        'white collar': ['What is white collar crime?'],
-        'broken windows': ['What is the broken windows theory?'],
-        'antisocial': ['What is antisocial personality disorder?']
-    }
-   
-    for keyword, questions in keywords.items():
-        if keyword in search_term:
-            question = questions[0]
-            for item in crime_database:
-                if item["question"] == question:
-                    return item["answer"]
-   
-    # Default responses for St. Kitts & Nevis specific queries
-    skn_responses = [
-        "Based on St. Kitts & Nevis criminal patterns, I recommend cross-referencing with the Royal St. Christopher and Nevis Police Force database.",
-        "Crime analysis for the Caribbean region suggests this pattern. Coordinate with the Director of Public Prosecutions office.",
-        "This case shows similarities to recent incidents in Basseterre. Consider interviewing witnesses near Independence Square.",
-        "Forensic protocols for St. Kitts & Nevis require documentation per Caribbean Association of Police Chiefs standards.",
-        "Evidence suggests connection to maritime activities between St. Kitts and Nevis. Contact Coast Guard unit 465-8384.",
-        "Pattern matches recent cases in tourist areas. Recommend liaison with Ministry of National Security.",
-        "This investigation may benefit from coordination with the Nevis Island Administration police division."
-    ]
-   
-    return random.choice(skn_responses)
+    results = []
+    
+    # Search through all text columns
+    for column in df.columns:
+        if df[column].dtype == 'object':  # Text columns
+            mask = df[column].astype(str).str.lower().str.contains(search_term, na=False)
+            matching_rows = df[mask]
+            
+            if not matching_rows.empty:
+                for _, row in matching_rows.iterrows():
+                    results.append(f"Found in {column}: {row.to_dict()}")
+    
+    if results:
+        return "\n\n".join(results[:3])  # Return top 3 results
+    else:
+        return f"No matches found for '{query}' in the uploaded crime data. Try different search terms."
 
 # Initialize session state
 if 'messages' not in st.session_state:
@@ -478,12 +437,15 @@ if 'messages' not in st.session_state:
     # Add initial bot message
     st.session_state.messages.append({
         "role": "assistant",
-        "content": "Welcome to SECURO, your AI crime investigation assistant for St. Kitts & Nevis law enforcement.\n\nI'm here to assist criminologists, police officers, forensic experts, and autopsy professionals with case analysis, evidence correlation, and investigative insights.\n\nHow can I assist with your investigation today?",
+        "content": "Welcome to SECURO, your AI crime investigation assistant for St. Kitts & Nevis law enforcement.\n\nI'm here to assist criminologists, police officers, forensic experts, and autopsy professionals with case analysis, evidence correlation, and investigative insights.\n\nPlease upload a CSV file with crime data to get started, then ask me questions about the data.\n\nHow can I assist with your investigation today?",
         "timestamp": datetime.datetime.now().strftime("%H:%M:%S")
     })
 
 if 'sidebar_state' not in st.session_state:
     st.session_state.sidebar_state = "expanded"
+
+if 'csv_data' not in st.session_state:
+    st.session_state.csv_data = None
 
 # Header with sidebar toggle
 col1, col2 = st.columns([1, 10])
@@ -527,6 +489,28 @@ function createParticles() {
 createParticles();
 </script>
 """, unsafe_allow_html=True)
+
+# Load CSV data automatically
+st.markdown('<div class="section-header">📊 Crime Data Status</div>', unsafe_allow_html=True)
+
+# Auto-load CSV data
+if 'csv_data' not in st.session_state:
+    st.session_state.csv_data = load_csv_data()
+
+if st.session_state.csv_data is not None:
+    st.success(f"✅ SecuroCrimeApp.csv loaded successfully! {len(st.session_state.csv_data)} records found.")
+    
+    # Show a preview of the data
+    with st.expander("📊 Preview Crime Database"):
+        st.dataframe(st.session_state.csv_data.head())
+        
+    # Show column info
+    with st.expander("📋 Database Structure"):
+        st.write("**Columns in your crime database:**")
+        for i, col in enumerate(st.session_state.csv_data.columns):
+            st.write(f"• {col}")
+else:
+    st.error("❌ Could not load crime database. Make sure 'SecuroCrimeApp.csv' is in the same folder as this app.")
 
 # Sidebar (only show if expanded)
 if st.session_state.sidebar_state == "expanded":
@@ -584,9 +568,6 @@ if st.session_state.sidebar_state == "expanded":
                     "timestamp": datetime.datetime.now().strftime("%H:%M:%S")
                 })
                 st.rerun()
-else:
-    # Show collapsed sidebar info in main area if needed
-    pass
 
 # Main chat area
 st.markdown('<div class="section-header">💬 Crime Investigation Chat</div>', unsafe_allow_html=True)
@@ -614,7 +595,7 @@ col1, col2 = st.columns([5, 1])
 with col1:
     user_input = st.text_input(
         "Message",
-        placeholder="Describe evidence, case details, or ask forensic questions...",
+        placeholder="Ask questions about the uploaded crime data...",
         label_visibility="collapsed",
         key="user_input"
     )
@@ -629,8 +610,8 @@ with col2:
                 "timestamp": datetime.datetime.now().strftime("%H:%M:%S")
             })
            
-            # Generate AI response
-            response = search_crime_database(user_input)
+            # Generate response based on CSV data
+            response = search_csv_data(st.session_state.csv_data, user_input)
             st.session_state.messages.append({
                 "role": "assistant",
                 "content": response,
@@ -648,7 +629,7 @@ st.markdown("""
     </div>
     <div class="status-item">
         <div class="status-dot status-processing"></div>
-        <span>SKN Crime Database Connected</span>
+        <span>CSV Data Ready</span>
     </div>
     <div class="status-item">
         <div class="status-dot status-evidence"></div>
