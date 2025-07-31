@@ -3,11 +3,51 @@ import time
 import datetime
 import random
 import pandas as pd
+import os
 import google.generativeai as genai
+import re
 
-# Initialize the AI model (API key should be set via environment variable or Streamlit secrets)
-# genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])  # Uncomment when you have API key configured
-# model = genai.GenerativeModel('gemini-1.5-flash')
+# System Prompt for SECURO Crime Mitigation Chatbot
+system_prompt = """
+You are SECURO, an intelligent and professional crime mitigation chatbot built to provide real-time, data-driven insights for a wide range of users, including law enforcement, criminologists, policy makers, and the general public.
+
+Your mission is to support crime prevention, research, and public safety through:
+- Interactive maps
+- Statistical analysis
+- Predictive analytics
+- Visual data presentations (charts, graphs, etc.)
+- Emergency contact guidance
+
+Capabilities:
+- Analyze and summarize current and historical crime data (local and global)
+- Detect trends and patterns across time, location, and type
+- Recommend prevention strategies based on geographic and temporal factors
+- Provide accessible language for general users, while supporting technical depth for experts
+- Integrate with GIS, crime databases (e.g. Crimeometer), and public safety APIs
+- Generate visual outputs using Python tools like matplotlib, pandas, folium, etc.
+- Adapt responses to be clear, concise, and actionable
+
+Tone & Behavior:
+- Maintain a professional yet human tone
+- Be concise, accurate, and helpful
+- Explain visuals when necessary
+- Avoid panic-inducing language—focus on empowerment and awareness
+- Respond directly without using code blocks, backticks, or HTML formatting
+
+Your responses should reflect an understanding of criminology, public safety, and data visualization best practices.
+"""
+
+# Initialize the AI model
+try:
+    GOOGLE_API_KEY = "AIzaSyAK-4Xklul9WNoiWnSrpzPkn5C-Dbny8B4"
+    genai.configure(api_key=GOOGLE_API_KEY)
+    model = genai.GenerativeModel('gemini-1.5-flash')
+    st.session_state.ai_enabled = True
+    st.session_state.ai_status = "✅ AI Ready (Direct API Key)"
+except Exception as e:
+    st.session_state.ai_enabled = False
+    st.session_state.ai_status = f"❌ AI Error: {str(e)}"
+    model = None
 
 # Page configuration
 st.set_page_config(
@@ -17,7 +57,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS styling - keeping the exact same design
+# Custom CSS styling - FIXED VERSION
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&display=swap');
@@ -265,10 +305,11 @@ st.markdown("""
     .hotspot-3 { top: 70%; left: 40%; }
     .hotspot-4 { top: 25%; left: 75%; }
    
-    /* Chat styling */
+    /* Chat styling - FIXED VERSION */
     .chat-message {
         margin-bottom: 20px;
         animation: fadeInUp 0.5s ease;
+        clear: both;
     }
 
     @keyframes fadeInUp {
@@ -291,26 +332,37 @@ st.markdown("""
         max-width: 80%;
         position: relative;
         font-family: 'JetBrains Mono', monospace;
+        word-wrap: break-word;
+        white-space: pre-wrap;
     }
 
     .user-message .message-content {
         background: linear-gradient(135deg, #ff4444, #cc3333);
-        color: #fff;
+        color: #ffffff !important;
         border-bottom-right-radius: 5px;
     }
 
     .bot-message .message-content {
-        background: rgba(0, 0, 0, 0.6);
-        color: #e0e0e0;
+        background: rgba(0, 0, 0, 0.8) !important;
+        color: #e0e0e0 !important;
         border: 1px solid rgba(255, 68, 68, 0.3);
         border-bottom-left-radius: 5px;
     }
 
     .message-time {
         font-size: 0.7rem;
-        color: #888;
+        color: #888 !important;
         margin-top: 5px;
         font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Override any conflicting Streamlit styles */
+    .bot-message .message-content * {
+        color: #e0e0e0 !important;
+    }
+
+    .user-message .message-content * {
+        color: #ffffff !important;
     }
    
     /* Status bar */
@@ -390,46 +442,112 @@ st.markdown("""
         font-family: 'JetBrains Mono', monospace;
         font-weight: 500;
     }
+
+    .file-status {
+        background: rgba(0, 0, 0, 0.6);
+        border: 1px solid rgba(255, 68, 68, 0.3);
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 20px;
+        font-family: 'JetBrains Mono', monospace;
+    }
+
+    .file-found {
+        color: #4ade80;
+    }
+
+    .file-missing {
+        color: #ff4444;
+    }
 </style>
 """, unsafe_allow_html=True)
 
 # CSV data handling
 @st.cache_data
 def load_csv_data():
-    """Load and cache CSV data"""
-    csv_filename = "SecuroCrimeApp.csv"  # Your CSV filename
+    csv_filename = "criminal_justice_qa.csv"
+    script_dir = os.path.dirname(__file__)
+    csv_path = os.path.join(script_dir, csv_filename)
     try:
-        df = pd.read_csv(csv_filename)
-        return df
-    except FileNotFoundError:
-        st.error(f"❌ CSV file '{csv_filename}' not found. Please make sure it's in the same folder as this app.")
-        return None
+        if os.path.exists(csv_path):
+            df = pd.read_csv(csv_path)
+            return df, f"Successfully loaded {csv_path}"
+        else:
+            current_dir = os.getcwd()
+            files_in_script_dir = os.listdir(script_dir)
+            files_in_current_dir = os.listdir(current_dir)
+            return None, f"""
+            Could not find '{csv_filename}'.
+            Expected: {csv_path}
+            Script directory: {script_dir}
+            CSV files in script dir: {', '.join([f for f in files_in_script_dir if f.endswith('.csv')])}
+            Current directory: {current_dir}
+            CSV files in current dir: {', '.join([f for f in files_in_current_dir if f.endswith('.csv')])}
+            """
     except Exception as e:
-        st.error(f"❌ Error loading CSV: {str(e)}")
-        return None
+        return None, f"Error loading CSV: {e}"
+
+
+def get_ai_response(user_input, csv_results):
+    """Generate AI response using the system prompt and context"""
+    if not st.session_state.get('ai_enabled', False) or model is None:
+        return csv_results  # Fallback to CSV search results
+   
+    try:
+        # Combine system prompt with user context
+        full_prompt = f"""
+        {system_prompt}
+       
+        Context from crime database search:
+        {csv_results}
+       
+        User query: {user_input}
+       
+        Please provide a comprehensive response as SECURO based on the available data and your crime analysis capabilities.
+        Respond directly without using code blocks, backticks, or HTML formatting.
+        """
+       
+        response = model.generate_content(full_prompt)
+       
+        # Clean the response - remove any unwanted formatting
+        clean_response = response.text.strip()
+        # Remove backticks if they exist
+        clean_response = clean_response.replace('```', '')
+        # Remove any HTML tags that might appear
+        clean_response = re.sub(r'<[^>]+>', '', clean_response)
+       
+        return clean_response
+       
+    except Exception as e:
+        return f"{csv_results}\n\n⚠️ AI analysis temporarily unavailable. Showing database search results."
+
 
 def search_csv_data(df, query):
     """Search through CSV data for relevant information"""
-    if df is None or df.empty:
-        return "No CSV data loaded. Please upload a CSV file to search through crime data."
-    
+    if df is None:
+        return "❌ No CSV data loaded. Please make sure 'criminal_justice_qa.csv' is in the correct location."
+   
     search_term = query.lower()
     results = []
-    
+   
     # Search through all text columns
     for column in df.columns:
         if df[column].dtype == 'object':  # Text columns
-            mask = df[column].astype(str).str.lower().str.contains(search_term, na=False)
-            matching_rows = df[mask]
-            
-            if not matching_rows.empty:
-                for _, row in matching_rows.iterrows():
-                    results.append(f"Found in {column}: {row.to_dict()}")
-    
+            try:
+                mask = df[column].astype(str).str.lower().str.contains(search_term, na=False)
+                matching_rows = df[mask]
+               
+                if not matching_rows.empty:
+                    for _, row in matching_rows.head(2).iterrows():  # Limit to 2 results per column
+                        result_dict = {k: v for k, v in row.to_dict().items() if pd.notna(v)}
+                        results.append(f"**Found in {column}:**\n{result_dict}")
+            except Exception as e:
+                continue
+   
     if results:
-        return "\n\n".join(results[:3])  # Return top 3 results
+        return f"🔍 **Search Results for '{query}':**\n\n" + "\n\n---\n\n".join(results[:3])
     else:
-        return f"No matches found for '{query}' in the uploaded crime data. Try different search terms."
+        return f"🔍 No matches found for '{query}' in the crime database. Try different search terms or check spelling."
 
 # Initialize session state
 if 'messages' not in st.session_state:
@@ -437,7 +555,7 @@ if 'messages' not in st.session_state:
     # Add initial bot message
     st.session_state.messages.append({
         "role": "assistant",
-        "content": "Welcome to SECURO, your AI crime investigation assistant for St. Kitts & Nevis law enforcement.\n\nI'm here to assist criminologists, police officers, forensic experts, and autopsy professionals with case analysis, evidence correlation, and investigative insights.\n\nPlease upload a CSV file with crime data to get started, then ask me questions about the data.\n\nHow can I assist with your investigation today?",
+        "content": "🚔 Welcome to SECURO - Your AI Crime Investigation Assistant for St. Kitts & Nevis Law Enforcement.\n\nI assist criminologists, police officers, forensic experts, and autopsy professionals with:\n• Case analysis and evidence correlation\n• Crime data search and insights\n• Investigative support and recommendations\n\n📊 Loading crime database... Please wait while I check for your data file.",
         "timestamp": datetime.datetime.now().strftime("%H:%M:%S")
     })
 
@@ -446,6 +564,9 @@ if 'sidebar_state' not in st.session_state:
 
 if 'csv_data' not in st.session_state:
     st.session_state.csv_data = None
+
+if 'csv_loaded' not in st.session_state:
+    st.session_state.csv_loaded = False
 
 # Header with sidebar toggle
 col1, col2 = st.columns([1, 10])
@@ -490,20 +611,41 @@ createParticles();
 </script>
 """, unsafe_allow_html=True)
 
-# Load CSV data automatically
-st.markdown('<div class="section-header">📊 Crime Data Status</div>', unsafe_allow_html=True)
+# Load CSV data with better error handling
+st.markdown('<div class="section-header">📊 Crime Database Status</div>', unsafe_allow_html=True)
 
-# Auto-load CSV data
-csv_filename = "criminal_justice_qa.csv"  # ← PUT YOUR CSV FILENAME HERE!
+# Load CSV only once
+if not st.session_state.csv_loaded:
+    with st.spinner("🔍 Searching for crime database..."):
+        csv_data, status_message = load_csv_data()
+        st.session_state.csv_data = csv_data
+        st.session_state.csv_loaded = True
+       
+        if csv_data is not None:
+            st.markdown(f'<div class="file-status file-found">{status_message}</div>', unsafe_allow_html=True)
+           
+            # Add success message to chat
+            st.session_state.messages.append({
+                "role": "assistant",
+                "content": f"✅ Crime database loaded successfully!\n\n📊 Database contains {len(csv_data)} records with {len(csv_data.columns)} data fields.\n\n🔍 You can now ask me questions about the crime data. Try asking about specific crimes, locations, dates, or any other information you need for your investigation.",
+                "timestamp": datetime.datetime.now().strftime("%H:%M:%S")
+            })
+        else:
+            st.markdown(f'<div class="file-status file-missing">{status_message}</div>', unsafe_allow_html=True)
+           
+            # Add error message to chat
+            st.session_state.messages.append({
+                "role": "assistant",
+                "content": f"❌ **Database Error:** {status_message}\n\n🔧 **How to fix:**\n1. Make sure your CSV file is named exactly `criminal_justice_qa.csv`\n2. Place it in the same folder as your Streamlit app\n3. Restart the application\n\n💡 Without the database, I can still help with general crime investigation guidance and emergency contacts.",
+                "timestamp": datetime.datetime.now().strftime("%H:%M:%S")
+            })
 
-# STEP 1: Load your CSV with PANDAS 🐼
-print("\n STEP 1: Loading your knowledge base...")
-df = pd.read_csv(csv_filename)
-print(f"✅ Loaded {len(df)} knowledge entries!")
-
-# Show what we loaded
-print(f"\n📊 Your data:")
-display(df.head())
+# Show current status
+ai_status = st.session_state.get('ai_status', 'AI Status Unknown')
+if st.session_state.csv_data is not None:
+    st.success(f"✅ Database Ready: {len(st.session_state.csv_data)} crime records loaded | {ai_status}")
+else:
+    st.error(f"❌ Database Not Found: Place 'criminal_justice_qa.csv' in app directory | {ai_status}")
 
 # Sidebar (only show if expanded)
 if st.session_state.sidebar_state == "expanded":
@@ -524,7 +666,7 @@ if st.session_state.sidebar_state == "expanded":
             if st.button(f"📞 {contact['name']}\n{contact['number']}", key=contact['name']):
                 st.session_state.messages.append({
                     "role": "assistant",
-                    "content": f"🚨 Emergency contact information accessed: {contact['name']} - {contact['number']}. Contact has been logged for case documentation.",
+                    "content": f"🚨 **Emergency Contact Accessed:**\n\n📞 **{contact['name']}:** {contact['number']}\n\n📝 Contact logged for case documentation. Emergency services are standing by for immediate response.",
                     "timestamp": datetime.datetime.now().strftime("%H:%M:%S")
                 })
                 st.rerun()
@@ -557,7 +699,7 @@ if st.session_state.sidebar_state == "expanded":
             if st.button(f"{hotspot['level']} {hotspot['name']}", key=f"hotspot_{hotspot['name']}"):
                 st.session_state.messages.append({
                     "role": "assistant",
-                    "content": f"📍 Crime hotspot analysis: {hotspot['name']} ({hotspot['coords']})\n\n{hotspot['level']} - Recommend increased patrol presence and witness canvassing in this area. Coordinating with local units for enhanced surveillance.",
+                    "content": f"📍 **Crime Hotspot Analysis:**\n\n🎯 **Location:** {hotspot['name']}\n📊 **Coordinates:** {hotspot['coords']}\n⚠️ **Status:** {hotspot['level']}\n\n🚔 **Recommendation:** Increased patrol presence and witness canvassing recommended. Coordinating with local units for enhanced surveillance in this area.",
                     "timestamp": datetime.datetime.now().strftime("%H:%M:%S")
                 })
                 st.rerun()
@@ -565,65 +707,89 @@ if st.session_state.sidebar_state == "expanded":
 # Main chat area
 st.markdown('<div class="section-header">💬 Crime Investigation Chat</div>', unsafe_allow_html=True)
 
-# Display chat messages
+# Display chat messages - FIXED VERSION
 for message in st.session_state.messages:
     if message["role"] == "user":
+        # Clean user message
+        clean_content = str(message["content"]).strip()
         st.markdown(f"""
         <div class="chat-message user-message">
-            <div class="message-content">{message["content"]}</div>
+            <div class="message-content">{clean_content}</div>
             <div class="message-time">{message["timestamp"]}</div>
         </div>
         """, unsafe_allow_html=True)
     else:
+        # Clean bot message and ensure proper formatting
+        clean_content = str(message["content"]).strip()
+        # Remove any unwanted HTML or formatting
+        clean_content = re.sub(r'<[^>]+>', '', clean_content)
+        clean_content = clean_content.replace('```', '')
+       
+        # Format with SECURO prefix if it doesn't already have it
+        if not clean_content.startswith("SECURO:") and not clean_content.startswith("🚔"):
+            if "SECURO" in clean_content.upper():
+                # If SECURO is mentioned but not at start, leave as is
+                pass
+            else:
+                clean_content = f"SECURO: {clean_content}"
+       
         st.markdown(f"""
         <div class="chat-message bot-message">
-            <div class="message-content">{message["content"]}</div>
+            <div class="message-content">{clean_content}</div>
             <div class="message-time">{message["timestamp"]}</div>
         </div>
         """, unsafe_allow_html=True)
 
 # Chat input
-col1, col2 = st.columns([5, 1])
-
-with col1:
-    user_input = st.text_input(
-        "Message",
-        placeholder="Ask questions about the uploaded crime data...",
-        label_visibility="collapsed",
-        key="user_input"
-    )
-
-with col2:
-    if st.button("Send", type="primary"):
-        if user_input:
-            # Add user message
-            st.session_state.messages.append({
-                "role": "user",
-                "content": user_input,
-                "timestamp": datetime.datetime.now().strftime("%H:%M:%S")
-            })
+with st.form("chat_form", clear_on_submit=True):
+    col1, col2 = st.columns([5, 1])
+   
+    with col1:
+        user_input = st.text_input(
+            "Message",
+            placeholder="Ask questions about crime data, investigations, or emergency procedures...",
+            label_visibility="collapsed",
+            key="user_input"
+        )
+   
+    with col2:
+        send_button = st.form_submit_button("Send", type="primary")
+   
+    if send_button and user_input:
+        # Add user message
+        st.session_state.messages.append({
+            "role": "user",
+            "content": user_input,
+            "timestamp": datetime.datetime.now().strftime("%H:%M:%S")
+        })
+       
+        # Generate response using AI if available, otherwise use CSV search
+        with st.spinner("🔍 Analyzing crime database..."):
+            csv_results = search_csv_data(st.session_state.csv_data, user_input)
+            response = get_ai_response(user_input, csv_results)
            
-            # Generate response based on CSV data
-            response = search_csv_data(st.session_state.csv_data, user_input)
-            st.session_state.messages.append({
-                "role": "assistant",
-                "content": response,
-                "timestamp": datetime.datetime.now().strftime("%H:%M:%S")
-            })
-           
-            st.rerun()
+        st.session_state.messages.append({
+            "role": "assistant",
+            "content": response,
+            "timestamp": datetime.datetime.now().strftime("%H:%M:%S")
+        })
+       
+        st.rerun()
 
 # Status bar
-st.markdown("""
+status_message = "CSV Data Ready" if st.session_state.csv_data is not None else "CSV Data Missing"
+status_class = "status-processing" if st.session_state.csv_data is not None else "status-evidence"
+
+st.markdown(f"""
 <div class="status-bar">
     <div class="status-item">
         <div class="status-dot status-online"></div>
         <span>SECURO AI Online</span>
     </div>
     <div class="status-item">
-        <div class="status-dot status-processing"></div>
-        <span>CSV Data Ready</span>
-    </div>	
+        <div class="status-dot {status_class}"></div>
+        <span>{status_message}</span>
+    </div>
     <div class="status-item">
         <div class="status-dot status-evidence"></div>
         <span>Emergency Services Linked</span>
