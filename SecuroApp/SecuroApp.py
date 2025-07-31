@@ -3,6 +3,55 @@ import time
 import datetime
 import random
 import pandas as pd
+import streamlit as st
+import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+# Load Q&A dataset
+@st.cache_data
+def load_qa_data():
+    df = pd.read_csv("/mnt/data/criminal_justice_qa.csv")
+    df = df.dropna()
+    return df
+
+df_qa = load_qa_data()
+
+# Build vectorizer for questions
+vectorizer = TfidfVectorizer()
+question_vectors = vectorizer.fit_transform(df_qa['question'])
+
+# Chatbot function to find best answer
+def get_best_answer(user_input):
+    user_vector = vectorizer.transform([user_input])
+    similarity = cosine_similarity(user_vector, question_vectors)
+    best_match_idx = similarity.argmax()
+    best_score = similarity[0, best_match_idx]
+
+    if best_score < 0.3:  # Confidence threshold
+        return "I'm not sure how to answer that. Could you please rephrase or ask something else?"
+    return df_qa.iloc[best_match_idx]['answer']
+
+# Streamlit UI
+st.set_page_config(page_title="SECURO - Crime Q&A Chatbot", layout="wide")
+st.title("🔎 SECURO - Crime & Justice Chatbot")
+st.write("Ask a question about criminal justice, crime prevention, or related topics.")
+
+# Chat interface
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
+
+user_query = st.text_input("Your question", key="user_input")
+
+if st.button("Ask"):
+    if user_query.strip():
+        bot_reply = get_best_answer(user_query)
+        st.session_state.chat_history.append(("You", user_query))
+        st.session_state.chat_history.append(("SECURO", bot_reply))
+        st.experimental_rerun()
+
+# Display chat history
+for speaker, message in st.session_state.chat_history:
+    st.markdown(f"**{speaker}:** {message}")
 
 # Page configuration
 st.set_page_config(
