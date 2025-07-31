@@ -2,7 +2,7 @@ import streamlit as st
 import time
 import datetime
 import random
-import google.generativem ai as genai
+import google.generativemai as genai
 
 GOOGLE_API_KEY = AIzaSyCkSjJBcI_wqA37bdF08ROrMFaGYObyjA
 genai.configure(api_key = AIzaSyCkSjJBcI_wqA37bdF08ROrMFaGYObyjA)
