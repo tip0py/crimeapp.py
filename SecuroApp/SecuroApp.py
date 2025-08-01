@@ -465,30 +465,30 @@ st.markdown("""
 # CSV data handling
 @st.cache_data
 def load_csv_data():
-    df = pd.read_csv(csv_path, encoding="ISO-8859-1")  # or 'latin1'
     csv_filename = "criminal_justice_qa.csv"
-    script_dir = os.path.dirname(__file__)
+    script_dir = os.path.dirname(os.path.abspath(__file__)) if "__file__" in globals() else os.getcwd()
     csv_path = os.path.join(script_dir, csv_filename)
+    
     try:
         if os.path.exists(csv_path):
-            df = pd.read_csv(csv_path)
-            return df, f"Successfully loaded {csv_path}"
+            # Try using a more forgiving encoding to avoid decode errors
+            df = pd.read_csv(csv_path, encoding="ISO-8859-1")
+            return df, f"✅ Successfully loaded {csv_filename} with {len(df)} rows and {len(df.columns)} columns."
         else:
             current_dir = os.getcwd()
             files_in_script_dir = os.listdir(script_dir)
             files_in_current_dir = os.listdir(current_dir)
             return None, f"""
-            Could not find '{csv_filename}'.
-            Expected: {csv_path}
+            ❌ Could not find '{csv_filename}'.
+            Expected path: {csv_path}
             Script directory: {script_dir}
-            CSV files in script dir: {', '.join([f for f in files_in_script_dir if f.endswith('.csv')])}
-            Current directory: {current_dir}
-            CSV files in current dir: {', '.join([f for f in files_in_current_dir if f.endswith('.csv')])}
+            CSVs in script dir: {', '.join([f for f in files_in_script_dir if f.endswith('.csv')])}
+            Current working dir: {current_dir}
+            CSVs in cwd: {', '.join([f for f in files_in_current_dir if f.endswith('.csv')])}
             """
     except Exception as e:
-        return None, f"Error loading CSV: {e}"
-
-
+        return None, f"❌ Error loading CSV: {e}"
+        
 def get_ai_response(user_input, csv_results):
     """Generate AI response using the system prompt and context"""
     if not st.session_state.get('ai_enabled', False) or model is None:
