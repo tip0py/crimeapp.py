@@ -465,6 +465,7 @@ st.markdown("""
 # CSV data handling
 @st.cache_data
 def load_csv_data():
+    df = pd.read_csv(csv_path, encoding="ISO-8859-1")  # or 'latin1'
     csv_filename = "criminal_justice_qa.csv"
     script_dir = os.path.dirname(__file__)
     csv_path = os.path.join(script_dir, csv_filename)
