@@ -6,10 +6,9 @@ import pandas as pd
 import os
 import google.generativeai as genai
 import re
-import chardet
 
 # System Prompt for SECURO Crime Mitigation Chatbot
-system_prompt = """, unsafe_allow_html=True)
+system_prompt = """
 You are SECURO, an intelligent and professional crime mitigation chatbot built to provide real-time, data-driven insights for a wide range of users, including law enforcement, criminologists, policy makers, and the general public.
 
 Your mission is to support crime prevention, research, and public safety through:
@@ -463,84 +462,32 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# IMPROVED CSV data handling with robust encoding detection
+# CSV data handling
 @st.cache_data
 def load_csv_data():
     csv_filename = "criminal_justice_qa.csv"
-    script_dir = os.path.dirname(os.path.abspath(__file__)) if "__file__" in globals() else os.getcwd()
+    script_dir = os.path.dirname(__file__)
     csv_path = os.path.join(script_dir, csv_filename)
-    
-    # Try multiple common file locations
-    possible_paths = [
-        csv_path,
-        os.path.join(os.getcwd(), csv_filename),
-        csv_filename  # Current directory
-    ]
-    
-    for path in possible_paths:
-        if os.path.exists(path):
-            try:
-                # First, detect the encoding of the file
-                with open(path, 'rb') as file:
-                    raw_data = file.read()
-                    detected_encoding = chardet.detect(raw_data)
-                    encoding = detected_encoding['encoding'] if detected_encoding['encoding'] else 'utf-8'
-                
-                # Try the detected encoding first
-                try:
-                    df = pd.read_csv(path, encoding=encoding)
-                    return df, f"✅ Successfully loaded {csv_filename} with {len(df)} rows and {len(df.columns)} columns using {encoding} encoding."
-                except UnicodeDecodeError:
-                    # If detected encoding fails, try common encodings in order
-                    encodings_to_try = ['utf-8', 'latin-1', 'iso-8859-1', 'cp1252', 'utf-16']
-                    
-                    for enc in encodings_to_try:
-                        try:
-                            df = pd.read_csv(path, encoding=enc)
-                            return df, f"✅ Successfully loaded {csv_filename} with {len(df)} rows and {len(df.columns)} columns using {enc} encoding."
-                        except (UnicodeDecodeError, UnicodeError):
-                            continue
-                    
-                    # If all encodings fail, try with error handling
-                    try:
-                        df = pd.read_csv(path, encoding='utf-8', errors='ignore')
-                        return df, f"⚠️ Loaded {csv_filename} with some character encoding issues ignored. {len(df)} rows and {len(df.columns)} columns."
-                    except Exception as e:
-                        return None, f"❌ Failed to read {csv_filename} even with error handling: {str(e)}"
-                        
-            except Exception as e:
-                return None, f"❌ Error processing {csv_filename}: {str(e)}"
-    
-    # If file not found in any location
-    current_dir = os.getcwd()
-    script_files = []
-    current_files = []
-    
     try:
-        script_files = [f for f in os.listdir(script_dir) if f.endswith('.csv')]
-    except:
-        pass
-    
-    try:
-        current_files = [f for f in os.listdir(current_dir) if f.endswith('.csv')]
-    except:
-        pass
-    
-    return None, f"""
-    ❌ Could not find '{csv_filename}' in any expected location.
-    
-    📁 Searched in:
-    • {csv_path}
-    • {os.path.join(os.getcwd(), csv_filename)}
-    • Current directory: {current_dir}
-    
-    📋 CSV files found:
-    • In script directory: {', '.join(script_files) if script_files else 'None'}
-    • In current directory: {', '.join(current_files) if current_files else 'None'}
-    
-    💡 Make sure your CSV file is named exactly 'criminal_justice_qa.csv' and placed in the same folder as your app.
-    """
-        
+        if os.path.exists(csv_path):
+            df = pd.read_csv(csv_path)
+            return df, f"Successfully loaded {csv_path}"
+        else:
+            current_dir = os.getcwd()
+            files_in_script_dir = os.listdir(script_dir)
+            files_in_current_dir = os.listdir(current_dir)
+            return None, f"""
+            Could not find '{csv_filename}'.
+            Expected: {csv_path}
+            Script directory: {script_dir}
+            CSV files in script dir: {', '.join([f for f in files_in_script_dir if f.endswith('.csv')])}
+            Current directory: {current_dir}
+            CSV files in current dir: {', '.join([f for f in files_in_current_dir if f.endswith('.csv')])}
+            """
+    except Exception as e:
+        return None, f"Error loading CSV: {e}"
+
+
 def get_ai_response(user_input, csv_results):
     """Generate AI response using the system prompt and context"""
     if not st.session_state.get('ai_enabled', False) or model is None:
@@ -689,7 +636,7 @@ if not st.session_state.csv_loaded:
             # Add error message to chat
             st.session_state.messages.append({
                 "role": "assistant",
-                "content": f"❌ **Database Error:** Unable to load CSV file due to encoding issues.\n\n🔧 **Solutions tried:**\n• Auto-detected file encoding\n• Multiple encoding formats (UTF-8, Latin-1, CP1252, etc.)\n• Error-tolerant reading\n\n💡 **Recommendations:**\n1. Re-save your CSV file in UTF-8 encoding\n2. Check for special characters or corrupted data\n3. Try opening the file in a text editor to verify content\n\n🆘 Without the database, I can still help with general crime investigation guidance and emergency contacts.",
+                "content": f"❌ **Database Error:** {status_message}\n\n🔧 **How to fix:**\n1. Make sure your CSV file is named exactly `criminal_justice_qa.csv`\n2. Place it in the same folder as your Streamlit app\n3. Restart the application\n\n💡 Without the database, I can still help with general crime investigation guidance and emergency contacts.",
                 "timestamp": datetime.datetime.now().strftime("%H:%M:%S")
             })
 
@@ -698,7 +645,7 @@ ai_status = st.session_state.get('ai_status', 'AI Status Unknown')
 if st.session_state.csv_data is not None:
     st.success(f"✅ Database Ready: {len(st.session_state.csv_data)} crime records loaded | {ai_status}")
 else:
-    st.error(f"❌ Database Loading Failed: Check CSV file encoding | {ai_status}")
+    st.error(f"❌ Database Not Found: Place 'criminal_justice_qa.csv' in app directory | {ai_status}")
 
 # Sidebar (only show if expanded)
 if st.session_state.sidebar_state == "expanded":
@@ -848,4 +795,4 @@ st.markdown(f"""
         <span>Emergency Services Linked</span>
     </div>
 </div>
-"""
+""", unsafe_allow_html=True)
