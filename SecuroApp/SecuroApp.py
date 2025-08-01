@@ -466,7 +466,7 @@ st.markdown("""
 @st.cache_data
 def load_csv_data():
     csv_filename = "criminal_justice_qa.csv"
-    script_dir = os.path.dirname(__file__)
+    script_dir = os.path.dirname(__file__)  # ✅ Correct - double underscores
     csv_path = os.path.join(script_dir, csv_filename)
     try:
         if os.path.exists(csv_path):
@@ -512,14 +512,14 @@ def get_ai_response(user_input, csv_results):
         # Clean the response - remove any unwanted formatting
         clean_response = response.text.strip()
         # Remove backticks if they exist
-        clean_response = clean_response.replace('```', '')
+        clean_response = clean_response.replace('', '')
         # Remove any HTML tags that might appear
         clean_response = re.sub(r'<[^>]+>', '', clean_response)
        
         return clean_response
        
     except Exception as e:
-        return f"{csv_results}\n\n⚠️ AI analysis temporarily unavailable. Showing database search results."
+        return f"{csv_results}\n\n⚠ AI analysis temporarily unavailable. Showing database search results."
 
 
 def search_csv_data(df, query):
@@ -699,7 +699,7 @@ if st.session_state.sidebar_state == "expanded":
             if st.button(f"{hotspot['level']} {hotspot['name']}", key=f"hotspot_{hotspot['name']}"):
                 st.session_state.messages.append({
                     "role": "assistant",
-                    "content": f"📍 **Crime Hotspot Analysis:**\n\n🎯 **Location:** {hotspot['name']}\n📊 **Coordinates:** {hotspot['coords']}\n⚠️ **Status:** {hotspot['level']}\n\n🚔 **Recommendation:** Increased patrol presence and witness canvassing recommended. Coordinating with local units for enhanced surveillance in this area.",
+                    "content": f"📍 **Crime Hotspot Analysis:**\n\n🎯 **Location:** {hotspot['name']}\n📊 **Coordinates:** {hotspot['coords']}\n⚠ **Status:** {hotspot['level']}\n\n🚔 **Recommendation:** Increased patrol presence and witness canvassing recommended. Coordinating with local units for enhanced surveillance in this area.",
                     "timestamp": datetime.datetime.now().strftime("%H:%M:%S")
                 })
                 st.rerun()
@@ -723,7 +723,7 @@ for message in st.session_state.messages:
         clean_content = str(message["content"]).strip()
         # Remove any unwanted HTML or formatting
         clean_content = re.sub(r'<[^>]+>', '', clean_content)
-        clean_content = clean_content.replace('```', '')
+        clean_content = clean_content.replace('', '')
        
         # Format with SECURO prefix if it doesn't already have it
         if not clean_content.startswith("SECURO:") and not clean_content.startswith("🚔"):
