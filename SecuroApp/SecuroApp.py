@@ -466,28 +466,27 @@ st.markdown("""
 @st.cache_data
 def load_csv_data():
     csv_filename = "criminal_justice_qa.csv"
-
+    script_dir = os.path.dirname(__file__)
+    csv_path = os.path.join(script_dir, csv_filename)
     try:
-        # Prefer current working directory for Streamlit
-        csv_path = os.path.join(os.getcwd(), csv_filename)
-
         if os.path.exists(csv_path):
-            try:
-                # Try loading with a more compatible encoding
-                df = pd.read_csv(csv_path, encoding="ISO-8859-1")
-                return df, f"✅ Successfully loaded {csv_filename}"
-            except Exception as e:
-                return None, f"❌ File found, but failed to load CSV: {e}"
+            df = pd.read_csv(csv_path)
+            return df, f"Successfully loaded {csv_path}"
         else:
             current_dir = os.getcwd()
+            files_in_script_dir = os.listdir(script_dir)
             files_in_current_dir = os.listdir(current_dir)
             return None, f"""
-❌ Could not find '{csv_filename}'.
-📂 Checked directory: {current_dir}
-📄 CSV files in this directory: {', '.join([f for f in files_in_current_dir if f.endswith('.csv')])}
-"""
+            Could not find '{csv_filename}'.
+            Expected: {csv_path}
+            Script directory: {script_dir}
+            CSV files in script dir: {', '.join([f for f in files_in_script_dir if f.endswith('.csv')])}
+            Current directory: {current_dir}
+            CSV files in current dir: {', '.join([f for f in files_in_current_dir if f.endswith('.csv')])}
+            """
     except Exception as e:
-        return None, f"❌ Unexpected error loading CSV: {e}"
+        return None, f"Error loading CSV: {e}"
+
 
 def get_ai_response(user_input, csv_results):
     """Generate AI response using the system prompt and context"""
